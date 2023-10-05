@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serial Interface</title>
+</head>
+<body>
+    <h1>Serial Interface</h1>
+
+    <div id="serial-data">
+        <!-- Display serial data here -->
+    </div>
+
+    <form id="serial-form">
+        <label for="data-input">Send Serial Data:</label>
+        <input type="text" id="data-input" name="data" required>
+        <button type="submit">Send</button>
+    </form>
+
+    <script>
+        // JavaScript for fetching and displaying serial data
+        function fetchSerialData() {
+            fetch('/read_serial')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('serial-data').innerText = data.data;
+                    fetchSerialData();  // Fetch data again for real-time updates
+                });
+        }
+
+        // Fetch serial data when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchSerialData();
+        });
+
+        // JavaScript for sending serial data
+        document.getElementById('serial-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            fetch('/send_serial', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Data sent successfully:', data);
+                // You can update the UI or provide feedback to the user here
+            });
+        });
+    </script>
+</body>
+</html>

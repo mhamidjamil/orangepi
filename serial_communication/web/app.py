@@ -186,7 +186,7 @@ def watcher_route():
 # Endpoint to handle POST requests from ESP32
 @app.route('/esp32', methods=['POST'])
 def handle_post():
-    """This function will handle POST requests from ESP32"""
+    """This function will handle POST requests from ESP32 to open gate"""
     if request.is_json:
         data = request.get_json()
         print(f"Received data from TTGO: {data['data']}")

@@ -6,6 +6,16 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Serial Interface</title>
+    <style>
+        /* Add some basic CSS to style the scrollable div */
+        #serial-data {
+            overflow-y: scroll;
+            max-height: 300px;
+            /* Adjust the height as needed */
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+    </style>
 </head>
 
 <body>
@@ -23,24 +33,18 @@
 
     <script>
         // JavaScript for fetching and displaying serial data
-        const maxSerialDataCount = 20;
-        const serialDataArray = [];
-
         function fetchSerialData() {
             fetch('/read_serial')
                 .then(response => response.json())
                 .then(data => {
-                    serialDataArray.push(data.data);
+                    // Append the new data to the existing content
+                    const serialData = document.getElementById('serial-data');
+                    serialData.innerText += data.data + '\n';
 
-                    // Keep only the last 20 entries
-                    if (serialDataArray.length > maxSerialDataCount) {
-                        serialDataArray.shift();
-                    }
+                    // Scroll to the bottom to show the latest data
+                    serialData.scrollTop = serialData.scrollHeight;
 
-                    // Update the UI with the last 20 entries
-                    document.getElementById('serial-data').innerText = serialDataArray.join('\n');
-
-                    fetchSerialData();  // Fetch data again for real-time updates
+                    fetchSerialData(); // Fetch data again for real-time updates
                 });
         }
 
@@ -64,7 +68,6 @@
                 });
         });
     </script>
-
 </body>
 
 </html>

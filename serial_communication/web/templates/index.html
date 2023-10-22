@@ -9,9 +9,12 @@
     <style>
         /* Add some basic CSS to style the scrollable div */
         #serial-data {
-            overflow-y: scroll;
+            resize: both;
+            /* Allow both horizontal and vertical resizing */
+            overflow: auto;
+            /* Adjust the overflow property */
             max-height: 300px;
-            /* Adjust the height as needed */
+            /* Adjust the maximum height as needed */
             border: 1px solid #ccc;
             padding: 10px;
         }

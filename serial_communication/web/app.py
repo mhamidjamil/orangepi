@@ -3,7 +3,22 @@ import serial
 
 app = Flask(__name__)
 # Replace with your actual serial port
+def get_serial_ports():
+    result = subprocess.run(['ls', '/dev'], capture_output=True, text=True)
+    output = result.stdout.split('\n')
+    serial_ports = [port for port in output if 'tty' in port]
+    return serial_ports
+
+# Set the default serial port
 ser = serial.Serial('/dev/ttyACM0', 115200)
+
+# Add a route to handle the serial port selection
+@app.route('/select_port', methods=['POST'])
+def select_port():
+    selected_port = request.form['port']
+    if selected_port in get_serial_ports():
+        ser.port = selected_port
+    return 'Serial port updated successfully'
 
 
 @app.route('/')

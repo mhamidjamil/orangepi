@@ -13,7 +13,7 @@
             /* Allow both horizontal and vertical resizing */
             overflow: auto;
             /* Adjust the overflow property */
-            max-height: 900px;
+            max-height: 700px;
             /* Adjust the maximum height as needed */
             border: 1px solid #ccc;
             padding: 10px;
@@ -31,6 +31,9 @@
     <form id="serial-form">
         <label for="data-input">Send Serial Data:</label>
         <input type="text" id="data-input" name="data" required>
+        <select id="port-select" name="port">
+            <!-- Populate the dropdown menu with the available serial ports -->
+        </select>
         <button type="submit" id="send-button">Send</button>
         <button type="button" id="clear-button">Clear</button>
     </form>
@@ -72,6 +75,18 @@
                     document.getElementById('data-input').value = ''; // Clear input field
                 });
         });
+
+        fetch('/get_serial_ports')
+            .then(response => response.json())
+            .then(data => {
+                const portSelect = document.getElementById('port-select');
+                data.ports.forEach(port => {
+                    const option = document.createElement('option');
+                    option.text = port;
+                    portSelect.add(option);
+                });
+            })
+            .catch(error => console.error('Error:', error));
 
         // JavaScript for clearing serial data
         document.getElementById('clear-button').addEventListener('click', function () {

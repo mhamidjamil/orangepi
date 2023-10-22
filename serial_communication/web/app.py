@@ -4,6 +4,7 @@ import serial
 app = Flask(__name__)
 # Replace with your actual serial port
 def get_serial_ports():
+    gotoHome = subprocess.run(['cd'], capture_output=False, text=True) 
     result = subprocess.run(['ls', '/dev'], capture_output=True, text=True)
     output = result.stdout.split('\n')
     serial_ports = [port for port in output if 'tty' in port]

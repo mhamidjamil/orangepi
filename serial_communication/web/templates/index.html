@@ -1,11 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Serial Interface</title>
+    <style>
+        /* Add some basic CSS to style the scrollable div */
+        #serial-data {
+            overflow-y: scroll;
+            max-height: 300px;
+            /* Adjust the height as needed */
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+    </style>
 </head>
+
 <body>
     <h1>Serial Interface</h1>
 
@@ -25,30 +37,37 @@
             fetch('/read_serial')
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById('serial-data').innerText = data.data;
-                    fetchSerialData();  // Fetch data again for real-time updates
+                    // Append the new data to the existing content
+                    const serialData = document.getElementById('serial-data');
+                    serialData.innerText += data.data + '\n';
+
+                    // Scroll to the bottom to show the latest data
+                    serialData.scrollTop = serialData.scrollHeight;
+
+                    fetchSerialData(); // Fetch data again for real-time updates
                 });
         }
 
         // Fetch serial data when the page loads
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             fetchSerialData();
         });
 
         // JavaScript for sending serial data
-        document.getElementById('serial-form').addEventListener('submit', function(event) {
+        document.getElementById('serial-form').addEventListener('submit', function (event) {
             event.preventDefault();
             const formData = new FormData(event.target);
             fetch('/send_serial', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Data sent successfully:', data);
-                // You can update the UI or provide feedback to the user here
-            });
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Data sent successfully:', data);
+                    // You can update the UI or provide feedback to the user here
+                });
         });
     </script>
 </body>
+
 </html>

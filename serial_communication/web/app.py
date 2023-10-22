@@ -3,7 +3,7 @@ import serial
 
 app = Flask(__name__)
 # Replace with your actual serial port
-ser = serial.Serial('/dev/ttyUSB0', 9600)
+ser = serial.Serial('/dev/ttyACM0', 115200)
 
 
 @app.route('/')

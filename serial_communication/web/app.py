@@ -1,12 +1,10 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request
 import serial
-import serial.tools.list_ports
 
 app = Flask(__name__)
+# Replace with your actual serial port
+ser = serial.Serial('/dev/ttyACM0', 115200)
 
-def get_serial_ports():
-    ports = [port.device for port in serial.tools.list_ports.comports() if 'tty' in port.device]
-    return jsonify({'ports': ports})
 
 @app.route('/')
 def index():

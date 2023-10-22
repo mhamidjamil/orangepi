@@ -13,7 +13,7 @@ def get_serial_ports():
 ser = serial.Serial('/dev/ttyACM0', 115200)
 
 # Add a route to handle the serial port selection
-@app.route('/select_port', methods=['POST'])
+@app.route('/get_serial_ports', methods=['POST'])
 def select_port():
     selected_port = request.form['port']
     if selected_port in get_serial_ports():

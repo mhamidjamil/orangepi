@@ -5,8 +5,9 @@ import serial.tools.list_ports
 app = Flask(__name__)
 
 # Function to get a list of available serial ports
+# Modify the get_serial_ports function
 def get_serial_ports():
-    return [port.device for port in serial.tools.list_ports.comports()]
+    return [{'port': port.device, 'baud_rate': 115200} for port in serial.tools.list_ports.comports() if port.device.startswith('/dev/tty')]
 
 # Replace with the default serial port
 default_serial_port = '/dev/ttyACM0'
@@ -20,10 +21,13 @@ except serial.SerialException:
 
 @app.route('/')
 def index():
-    # Get a list of available serial ports
+    # Get a list of available serial ports with default baud rate
     available_ports = get_serial_ports()
 
-    return render_template('index.html', default_port=default_serial_port, available_ports=available_ports)
+    # Baud rates to be displayed in the dropdown
+    baud_rates = [9600, 115200, 230400, 460800, 921600]
+
+    return render_template('index.html', default_port=default_serial_port, available_ports=available_ports, baud_rates=baud_rates)
 
 
 @app.route('/read_serial')
@@ -41,6 +45,11 @@ def read_serial():
 @app.route('/send_serial', methods=['POST'])
 def send_serial():
     if ser:
+        # Get the selected baud rate from the form or use the default (115200)
+        baud_rate = int(request.form.get('baudRate', 115200))
+
+        # Update the serial connection baud rate
+        ser.baudrate = baud_rate
         data_to_send = request.form['data']
         ser.write(data_to_send.encode('utf-8'))
         return {'status': 'success'}

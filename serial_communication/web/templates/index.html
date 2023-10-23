@@ -6,9 +6,19 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Serial Interface</title>
-    <div id="serial-data" style="resize: both; overflow: auto; max-height: 700px; border: 1px solid #ccc; padding: 10px;" class="auto-scroll">
-        <!-- Display serial data here -->
-    </div>
+    <style>
+        /* Add some basic CSS to style the scrollable div */
+        #serial-data {
+            resize: both;
+            /* Allow both horizontal and vertical resizing */
+            overflow: auto;
+            /* Adjust the overflow property */
+            max-height: 700px;
+            /* Adjust the maximum height as needed */
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+    </style>
 </head>
 
 <body>
@@ -22,23 +32,6 @@
         <label for="data-input">Send Serial Data:</label>
         <input type="text" id="data-input" name="data" required>
 
-        <label for="port-select">Select Serial Port:</label>
-        <select id="port-select" name="serialPort">
-            {% for port in available_ports %}
-                <option value="{{ port }}" {% if port == default_port %}selected{% endif %}>{{ port }}</option>
-            {% endfor %}
-        </select>
-
-        <label for="baud-rate-select">Select Baud Rate:</label>
-        <select id="baud-rate-select" name="baudRate">
-            {% for baud_rate in baud_rates %}
-                <option value="{{ baud_rate }}" {% if baud_rate == 115200 %}selected{% endif %}>{{ baud_rate }}</option>
-            {% endfor %}
-        </select>
-
-        <label for="auto-scroll-checkbox">Auto Scroll:</label>
-        <input type="checkbox" id="auto-scroll-checkbox" checked>
-
         <button type="submit" id="send-button">Send</button>
         <button type="button" id="clear-button">Clear</button>
     </form>
@@ -49,14 +42,12 @@
             fetch('/read_serial')
                 .then(response => response.json())
                 .then(data => {
-                    // Append the new data to the existing content with different color for received data
+                    // Append the new data to the existing content
                     const serialData = document.getElementById('serial-data');
-                    serialData.innerHTML += `<span style="color: blue;">${data.data}</span><br>`;
+                    serialData.innerText += data.data + '\n';
 
-                    // Scroll to the bottom to show the latest data if auto-scroll is enabled
-                    if (document.getElementById('auto-scroll-checkbox').checked) {
-                        serialData.scrollTop = serialData.scrollHeight;
-                    }
+                    // Scroll to the bottom to show the latest data
+                    serialData.scrollTop = serialData.scrollHeight;
 
                     fetchSerialData(); // Fetch data again for real-time updates
                 });
@@ -80,15 +71,6 @@
                     console.log('Data sent successfully:', data);
                     // You can update the UI or provide feedback to the user here
                     document.getElementById('data-input').value = ''; // Clear input field
-                    // Append the sent data to the serial terminal with different color
-                    const serialData = document.getElementById('serial-data');
-                    const sentData = document.getElementById('data-input').value;
-                    serialData.innerHTML += `<span style="color: green;">${sentData}</span><br>`;
-                    // Scroll to the bottom after sending data
-                    if (document.getElementById('auto-scroll-checkbox').checked) {
-                        const serialData = document.getElementById('serial-data');
-                        serialData.scrollTop = serialData.scrollHeight;
-                    }
                 });
         });
 

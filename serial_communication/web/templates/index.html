@@ -32,6 +32,13 @@
         <label for="data-input">Send Serial Data:</label>
         <input type="text" id="data-input" name="data" required>
 
+        <label for="port-select">Select Serial Port:</label>
+        <select id="port-select" name="serialPort">
+            {% for port in available_ports %}
+                <option value="{{ port }}" {% if port == default_port %}selected{% endif %}>{{ port }}</option>
+            {% endfor %}
+        </select>
+
         <button type="submit" id="send-button">Send</button>
         <button type="button" id="clear-button">Clear</button>
     </form>

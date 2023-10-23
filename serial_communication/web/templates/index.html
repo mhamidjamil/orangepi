@@ -6,19 +6,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Serial Interface</title>
-    <style>
-        /* Add some basic CSS to style the scrollable div */
-        #serial-data {
-            resize: both;
-            /* Allow both horizontal and vertical resizing */
-            overflow: auto;
-            /* Adjust the overflow property */
-            max-height: 700px;
-            /* Adjust the maximum height as needed */
-            border: 1px solid #ccc;
-            padding: 10px;
-        }
-    </style>
+    <div id="serial-data" style="resize: both; overflow: auto; max-height: 700px; border: 1px solid #ccc; padding: 10px;" class="auto-scroll">
+        <!-- Display serial data here -->
+    </div>
 </head>
 
 <body>
@@ -46,6 +36,9 @@
             {% endfor %}
         </select>
 
+        <label for="auto-scroll-checkbox">Auto Scroll:</label>
+        <input type="checkbox" id="auto-scroll-checkbox" checked>
+
         <button type="submit" id="send-button">Send</button>
         <button type="button" id="clear-button">Clear</button>
     </form>
@@ -60,8 +53,10 @@
                     const serialData = document.getElementById('serial-data');
                     serialData.innerText += data.data + '\n';
 
-                    // Scroll to the bottom to show the latest data
-                    serialData.scrollTop = serialData.scrollHeight;
+                    // Scroll to the bottom to show the latest data if auto-scroll is enabled
+                    if (document.getElementById('auto-scroll-checkbox').checked) {
+                        serialData.scrollTop = serialData.scrollHeight;
+                    }
 
                     fetchSerialData(); // Fetch data again for real-time updates
                 });
@@ -85,6 +80,10 @@
                     console.log('Data sent successfully:', data);
                     // You can update the UI or provide feedback to the user here
                     document.getElementById('data-input').value = ''; // Clear input field
+                    if (document.getElementById('auto-scroll-checkbox').checked) {
+                        const serialData = document.getElementById('serial-data');
+                        serialData.scrollTop = serialData.scrollHeight;
+                    }
                 });
         });
 

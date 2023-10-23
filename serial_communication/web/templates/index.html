@@ -49,9 +49,9 @@
             fetch('/read_serial')
                 .then(response => response.json())
                 .then(data => {
-                    // Append the new data to the existing content
+                    // Append the new data to the existing content with different color for received data
                     const serialData = document.getElementById('serial-data');
-                    serialData.innerText += data.data + '\n';
+                    serialData.innerHTML += `<span style="color: blue;">${data.data}</span><br>`;
 
                     // Scroll to the bottom to show the latest data if auto-scroll is enabled
                     if (document.getElementById('auto-scroll-checkbox').checked) {
@@ -80,6 +80,11 @@
                     console.log('Data sent successfully:', data);
                     // You can update the UI or provide feedback to the user here
                     document.getElementById('data-input').value = ''; // Clear input field
+                    // Append the sent data to the serial terminal with different color
+                    const serialData = document.getElementById('serial-data');
+                    const sentData = document.getElementById('data-input').value;
+                    serialData.innerHTML += `<span style="color: green;">${sentData}</span><br>`;
+                    // Scroll to the bottom after sending data
                     if (document.getElementById('auto-scroll-checkbox').checked) {
                         const serialData = document.getElementById('serial-data');
                         serialData.scrollTop = serialData.scrollHeight;

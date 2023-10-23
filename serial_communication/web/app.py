@@ -29,8 +29,11 @@ def index():
 @app.route('/read_serial')
 def read_serial():
     if ser:
-        data = ser.readline().decode('utf-8')
-        return {'data': data}
+        try:
+            data = ser.readline().decode('utf-8')
+            return {'data': data.strip()}  # Strip whitespace from the data
+        except UnicodeDecodeError:
+            return {'error': 'Error decoding serial data'}
     else:
         return {'error': 'Serial port not accessible'}
 

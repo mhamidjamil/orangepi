@@ -1,11 +1,13 @@
-#version: 1.0.1
-#Version notes: app.py will now start communicating with module
+#version: 1.0.2
+#Version notes: multi-threading
 from flask import Flask, render_template, request
 import serial
 import serial.tools.list_ports
 import requests
 import datetime
 import schedule
+import threading
+import time
 
 app = Flask(__name__)
 
@@ -83,6 +85,12 @@ def update_time():
 
 schedule.every(2).minutes.do(update_time)
 
+def update_schedule():
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
 if __name__ == '__main__':
+    thread = threading.Thread(target=update_schedule)
+    thread.start()
     app.run(host='0.0.0.0', port=6677, debug=True)
-    schedule.run_pending()

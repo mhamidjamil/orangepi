@@ -53,6 +53,7 @@ def read_serial():
         try:
             data = ser.readline().decode('utf-8')
             read_serial_data(data)
+
             return {'data': data.strip()}  # Strip whitespace from the data
         except UnicodeDecodeError:
             return {'error': 'Error decoding serial data'}

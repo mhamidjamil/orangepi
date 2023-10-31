@@ -33,6 +33,8 @@ def fetch_prayer_times():
         message = f"{next_prayer}: {prayer_time}"
         print(message)
         # Replace the following line with code to send the message to /dev/ttyUSB1
+    else:
+        print("Failed to fetch next prayer time.")
 
 def fetch_current_time_online():
     try:

@@ -1,5 +1,8 @@
-#version: 1.0.2
-#Version notes: multi-threading
+
+#$ last work 27/Oct/23 [01:58 AM]
+## version 1.0.3
+## Release Note : started communication with ttgo
+
 from flask import Flask, render_template, request
 import serial
 import serial.tools.list_ports
@@ -37,11 +40,20 @@ def index():
     return render_template('index.html', default_port=default_serial_port, available_ports=available_ports, baud_rates=baud_rates)
 
 
+def read_serial_data(data):
+    if "{orange-pi!:" in data:
+        if "send time" in data or "update time" in data:
+            update_time()
+        else:
+            print(f"unknown command: {data}")
+
 @app.route('/read_serial')
 def read_serial():
     if ser:
         try:
             data = ser.readline().decode('utf-8')
+            read_serial_data(data)
+
             return {'data': data.strip()}  # Strip whitespace from the data
         except UnicodeDecodeError:
             return {'error': 'Error decoding serial data'}

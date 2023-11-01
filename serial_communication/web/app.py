@@ -41,7 +41,7 @@ def index():
 
 
 def read_serial_data(data):
-    if "{orange-pi!:" in data:
+    if "{hay orange-pi!" in data:
         if "send time" in data or "update time" in data:
             update_time()
         elif "send ip" in data:
@@ -50,7 +50,7 @@ def read_serial_data(data):
             print(f"sending : {msg}")
             send_to_serial_port(msg)
         else:
-            print(f"unknown command: {data}")
+            print(f"unknown keywords in command: {data}")
 
 @app.route('/read_serial')
 def read_serial():

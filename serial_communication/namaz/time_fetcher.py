@@ -17,6 +17,8 @@ def fetch_prayer_times():
     if not current_time:
         print("Failed to fetch current time online.")
         return
+    else:
+        print(f"Current time: {current_time}")
 
     # Find the prayer time row that corresponds to the next prayer after the current time
     prayer_times = soup.find_all('td', {'data-label': True})
@@ -34,7 +36,13 @@ def fetch_prayer_times():
         print(message)
         # Replace the following line with code to send the message to /dev/ttyUSB1
     else:
-        print("Failed to fetch next prayer time.")
+        fajr_element = soup.find('td', {'data-label': 'Fajr'})
+        if fajr_element:
+            fajr_time = fajr_element.text.strip()
+            fajr_time_obj = datetime.datetime.strptime(fajr_time, '%I:%M %p') - datetime.timedelta(minutes=2)
+            print(f"Fajr time: {fajr_time_obj.strftime('%I:%M %p')} (?)")
+        else:
+            print("Failed to find Fajr time.")
 
 def fetch_current_time_online():
     try:
@@ -42,6 +50,7 @@ def fetch_current_time_online():
         data = response.json()
         current_time = datetime.datetime.fromisoformat(data['datetime'])
         formatted_time = current_time.strftime("%I:%M %p")
+        # return "10:00 AM"
         return formatted_time
     except requests.exceptions.RequestException as e:
         print(f"An error occurred: {e}")

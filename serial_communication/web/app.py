@@ -1,7 +1,7 @@
 
-#$ last work 27/Oct/23 [01:58 AM]
-## version 1.0.3
-## Release Note : started communication with ttgo
+#$ last work 02/Nov/23 [12:41 AM]
+## version 1.0.4
+## Release Note : CW sending public IP
 
 from flask import Flask, render_template, request
 import serial
@@ -44,6 +44,11 @@ def read_serial_data(data):
     if "{orange-pi!:" in data:
         if "send time" in data or "update time" in data:
             update_time()
+        elif "send ip" in data:
+            ip = requests.get('https://api.ipify.org').text
+            msg = '{hay ttgo-tcall! here is the ip: ' + ip + '.}'
+            print(f"sending : {msg}")
+            send_to_serial_port(msg)
         else:
             print(f"unknown command: {data}")
 

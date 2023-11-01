@@ -46,3 +46,8 @@ This project is licensed under the [MIT License](LICENSE).
 ---
 
 Feel free to customize the content based on your preferences and additional details you want to include. The README provides a quick guide on how to set up and use your Serial Interface Web App.
+
+- How Orange Pi send commands to TTGO-TCall:
+  {hay ttgo-tcall! here goes the query?}
+- How TTGO_TCall send commands to Orange Pi:
+  {hay orange-pi! here goes the query?}

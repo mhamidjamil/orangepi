@@ -42,9 +42,9 @@ def index():
 
 def read_serial_data(data):
     if "{hay orange-pi!" in data:
-        if "send time" in data or "update time" in data:
+        if "send time" in data or "update time" in data or "send updated time" in data:
             update_time()
-        elif "send ip" in data:
+        elif "send ip" in data or "update ip" in data or "my ip" in data:
             ip = requests.get('https://api.ipify.org').text
             msg = '{hay ttgo-tcall! here is the ip: ' + ip + '.}'
             print(f"sending : {msg}")

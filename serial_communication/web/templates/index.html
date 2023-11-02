@@ -6,7 +6,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Serial Interface</title>
-    <div id="serial-data" style="resize: both; overflow: auto; max-height: 700px; border: 1px solid #ccc; padding: 10px;" class="auto-scroll">
+    <div id="serial-data"
+        style="resize: both; overflow: auto; max-height: 680px; border: 1px solid #ccc; padding: 10px;"
+        class="auto-scroll">
         <!-- Display serial data here -->
     </div>
 </head>
@@ -25,14 +27,14 @@
         <label for="port-select">Select Serial Port:</label>
         <select id="port-select" name="serialPort">
             {% for port in available_ports %}
-                <option value="{{ port }}" {% if port == default_port %}selected{% endif %}>{{ port }}</option>
+            <option value="{{ port }}" {% if port==default_port %}selected{% endif %}>{{ port }}</option>
             {% endfor %}
         </select>
 
         <label for="baud-rate-select">Select Baud Rate:</label>
         <select id="baud-rate-select" name="baudRate">
             {% for baud_rate in baud_rates %}
-                <option value="{{ baud_rate }}" {% if baud_rate == 115200 %}selected{% endif %}>{{ baud_rate }}</option>
+            <option value="{{ baud_rate }}" {% if baud_rate==115200 %}selected{% endif %}>{{ baud_rate }}</option>
             {% endfor %}
         </select>
 

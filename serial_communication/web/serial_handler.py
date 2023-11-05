@@ -2,11 +2,14 @@
 
 import requests
 import datetime
-import serial
 
 ser = None  # Define serial port globally
 
-def read_serial_data(data):
+def set_serial_object(serial_object):
+    global ser
+    ser = serial_object
+
+def read_serial(data):
     if "{hay orange-pi!" in data:
         if "send time" in data or "update time" in data or "send updated time" in data:
             update_time()
@@ -17,17 +20,6 @@ def read_serial_data(data):
             send_to_serial_port(msg)
         else:
             print(f"unknown keywords in command: {data}")
-
-def read_serial(ser):
-    if ser:
-        try:
-            data = ser.readline().decode('utf-8')
-            read_serial_data(data)
-            return {'data': data.strip()}  # Strip whitespace from the data
-        except UnicodeDecodeError:
-            return {'error': 'Error decoding serial data'}
-    else:
-        return {'error': 'Serial port not accessible'}
 
 def fetch_current_time_online():
     try:
@@ -43,7 +35,7 @@ def fetch_current_time_online():
 def send_to_serial_port(serial_data):
     try:
         ser.write(serial_data.encode())
-    except serial.SerialException as e:
+    except ser.SerialException as e:
         print(f"An error occurred while sending data to serial port: {e}")
 
 def update_time():

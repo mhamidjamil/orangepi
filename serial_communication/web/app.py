@@ -9,7 +9,7 @@ import serial.tools.list_ports
 import schedule
 import threading
 import time
-import serial_handler  # Import the serial_handler module
+import serial_handler
 
 app = Flask(__name__)
 
@@ -21,12 +21,12 @@ def get_serial_ports():
 # Replace with the default serial port
 default_serial_port = '/dev/ttyACM0'
 ser = None
-
-# Attempt to open the default serial port
 try:
     ser = serial.Serial(default_serial_port, 115200)
-except serial.SerialException:
-    pass  # Handle the exception if the default port is not accessible
+    serial_handler.set_serial_object(ser)  # Pass the ser object to serial_handler
+except serial.SerialException as e:
+    print(f"An error occurred while opening the serial port: {e}")
+    ser = None
 
 @app.route('/')
 def index():

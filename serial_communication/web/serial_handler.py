@@ -2,8 +2,9 @@
 
 import requests
 import datetime
+import re
 
-ser = None  # Define serial port globally
+ser = None
 
 def set_serial_object(serial_object):
     global ser
@@ -18,6 +19,16 @@ def read_serial(data):
             msg = '{hay ttgo-tcall! here is the ip: ' + ip + '.}'
             print(f"sending : {msg}")
             send_to_serial_port(msg)
+        elif "untrained_message:" in data:
+            temp_str = re.search(r'untrained_message:(.*?) from', data).group(1).strip()
+            sender_number = re.search(r'from : {_([^_]*)_', data).group(1)
+            new_message_number = re.search(r'<_(\d+)_>', data).group(1)
+
+            print(f"Extracted message: {temp_str}")
+            print(f"Extracted sender_number: {sender_number}")
+            print(f"Extracted new_message_number: {new_message_number}")
+
+
         else:
             print(f"unknown keywords in command: {data}")
 
@@ -45,4 +56,3 @@ def update_time():
         send_to_serial_port(current_time)
     else:
         print("Failed to fetch current time.")
-

@@ -1,7 +1,7 @@
 
-#$ last work 05/Nov/23 [01:41 PM]
-## version 1.0.5
-## Release Note : serial management in separate file
+#$ last work 08/Nov/23 [12:44 AM]
+## version 1.0.6
+## Release Note : Can read untrained messages from ttgo tcall
 
 from flask import Flask, render_template, request
 import serial

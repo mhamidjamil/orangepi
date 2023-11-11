@@ -12,6 +12,6 @@ def send_auth():
     random_number = random.randint(100000, 999999)
     print(f"Generated random number: {random_number}")
 
-    send_to_serial_from_routes("[Your 2FA pin is : " + str(random_number) + " don't share it with any one ;) ] for phone number: {" + phone_number + "}.")
+    send_to_serial_from_routes("[Your 2FA pin is: " + str(random_number) + " don't share it with any one ;) ] for phone number: {" + phone_number + "}.")
 
     return jsonify({'result': 'Function alfa executed successfully', '2FA pin': random_number})

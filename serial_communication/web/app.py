@@ -1,7 +1,7 @@
 
-#$ last work 08/Nov/23 [12:44 AM]
-## version 1.0.6
-## Release Note : Can read untrained messages from ttgo tcall
+#$ last work 12/Nov/23 [01:22 AM]
+## version 1.0.7
+## Release Note : 2FA added
 
 from flask import Flask, render_template, request
 import serial

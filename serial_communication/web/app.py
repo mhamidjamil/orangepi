@@ -10,6 +10,7 @@ import schedule
 import threading
 import time
 import serial_handler
+from routes.routes import send_auth
 
 app = Flask(__name__)
 
@@ -57,10 +58,9 @@ def send_serial():
     ser.write(data_to_send.encode('utf-8'))
     return {'status': 'success'}
 
-@app.route('/function_alfa', methods=['GET'])
-def function_alfa():
-    # Your function_alfa logic here
-    return jsonify({'result': 'Function alfa executed successfully'})
+@app.route('/send_auth', methods=['GET'])
+def send_auth_route():
+    return send_auth()
 
 schedule.every(2).minutes.do(serial_handler.update_time)
 

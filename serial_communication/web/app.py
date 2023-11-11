@@ -3,7 +3,7 @@
 ## version 1.0.6
 ## Release Note : Can read untrained messages from ttgo tcall
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import serial
 import serial.tools.list_ports
 import schedule
@@ -57,6 +57,10 @@ def send_serial():
     ser.write(data_to_send.encode('utf-8'))
     return {'status': 'success'}
 
+@app.route('/function_alfa', methods=['GET'])
+def function_alfa():
+    # Your function_alfa logic here
+    return jsonify({'result': 'Function alfa executed successfully'})
 
 schedule.every(2).minutes.do(serial_handler.update_time)
 

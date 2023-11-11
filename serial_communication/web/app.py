@@ -1,7 +1,7 @@
 
-#$ last work 05/Nov/23 [01:41 PM]
-## version 1.0.5
-## Release Note : serial management in separate file
+#$ last work 12/Nov/23 [01:22 AM]
+## version 1.0.7
+## Release Note : 2FA added
 
 from flask import Flask, render_template, request
 import serial
@@ -9,7 +9,8 @@ import serial.tools.list_ports
 import schedule
 import threading
 import time
-import serial_handler
+from routes.serial_handler import set_serial_object, read_serial_data, update_time
+from routes.routes import send_auth
 
 app = Flask(__name__)
 
@@ -23,7 +24,7 @@ default_serial_port = '/dev/ttyACM0'
 ser = None
 try:
     ser = serial.Serial(default_serial_port, 115200)
-    serial_handler.set_serial_object(ser)  # Pass the ser object to serial_handler
+    set_serial_object(ser)
 except serial.SerialException as e:
     print(f"An error occurred while opening the serial port: {e}")
     ser = None
@@ -43,7 +44,7 @@ def read_serial():
     if ser:
         try:
             data = ser.readline().decode('utf-8')
-            serial_handler.read_serial(data)
+            read_serial_data(data)
 
             return {'data': data.strip()}  # Strip whitespace from the data
         except UnicodeDecodeError:
@@ -57,8 +58,11 @@ def send_serial():
     ser.write(data_to_send.encode('utf-8'))
     return {'status': 'success'}
 
+@app.route('/send_auth', methods=['GET'])
+def send_auth_route():
+    return send_auth()
 
-schedule.every(2).minutes.do(serial_handler.update_time)
+schedule.every(2).minutes.do(update_time)
 
 def update_schedule():
     while True:

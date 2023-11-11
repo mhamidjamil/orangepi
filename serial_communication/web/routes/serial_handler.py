@@ -10,7 +10,7 @@ def set_serial_object(serial_object):
     global ser
     ser = serial_object
 
-def read_serial(data):
+def read_serial_data(data):
     if "{hay orange-pi!" in data:
         if "send time" in data or "update time" in data or "send updated time" in data:
             update_time()
@@ -45,6 +45,7 @@ def fetch_current_time_online():
 
 def send_to_serial_port(serial_data):
     try:
+        print(f"Sending data to serial port: {serial_data}")
         ser.write(serial_data.encode())
     except ser.SerialException as e:
         print(f"An error occurred while sending data to serial port: {e}")

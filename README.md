@@ -43,11 +43,20 @@ This is a simple web application that allows you to view and interact with seria
 
 This project is licensed under the [MIT License](LICENSE).
 
----
-
-Feel free to customize the content based on your preferences and additional details you want to include. The README provides a quick guide on how to set up and use your Serial Interface Web App.
-
 - How Orange Pi send commands to TTGO-TCall:
   {hay ttgo-tcall! here goes the query?}
 - How TTGO_TCall send commands to Orange Pi:
   {hay orange-pi! here goes the query?}
+Certainly! Here's a concise note for your README file:
+
+New feature added to this project offers a streamlined solution for fetching upcoming Namaz (prayer) times and the current time, tailored for Lahore/Punjab, Pakistan. Additionally, it seamlessly integrates with the [TTGO TCall](https://github.com/mhamidjamil/TTGO_TCall) project, allowing users to leverage it as a Two-Factor Authentication (2FA) method.
+
+**Key Features:**
+
+- Retrieve Namaz Times for Lahore/Punjab, Pakistan.
+- Obtain Current Time in the Local Time Zone.
+- Integration with TTGO TCall for 2FA Verification.
+
+**Usage:**
+
+To unlock the full potential of the 2FA feature, it is recommended to combine the functionalities of both the OrangePi and TTGO TCall projects.

@@ -1,7 +1,7 @@
 
-#$ last work 12/Nov/23 [01:22 AM]
-## version 1.0.7
-## Release Note : 2FA added
+#$ last work 13/Nov/23 [07:35 PM]
+## version 1.0.8
+## Release Note : Namaz Time will be displayed on TTGO-TCall display
 
 from flask import Flask, render_template, request
 import serial
@@ -9,7 +9,7 @@ import serial.tools.list_ports
 import schedule
 import threading
 import time
-from routes.serial_handler import set_serial_object, read_serial_data, update_time
+from routes.serial_handler import set_serial_object, read_serial_data, update_time, update_namaz_time
 from routes.routes import send_auth
 
 app = Flask(__name__)
@@ -63,6 +63,7 @@ def send_auth_route():
     return send_auth()
 
 schedule.every(2).minutes.do(update_time)
+schedule.every(1).minutes.do(update_namaz_time)
 
 def update_schedule():
     while True:

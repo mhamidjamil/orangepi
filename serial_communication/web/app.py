@@ -9,7 +9,7 @@ import serial.tools.list_ports
 import schedule
 import threading
 import time
-from routes.serial_handler import set_serial_object, read_serial_data, update_time
+from routes.serial_handler import set_serial_object, read_serial_data, update_time, update_namaz_time
 from routes.routes import send_auth
 
 app = Flask(__name__)
@@ -63,6 +63,7 @@ def send_auth_route():
     return send_auth()
 
 schedule.every(2).minutes.do(update_time)
+schedule.every(1).minutes.do(update_namaz_time)
 
 def update_schedule():
     while True:

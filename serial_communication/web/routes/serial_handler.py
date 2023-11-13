@@ -4,6 +4,26 @@ import requests
 import datetime
 import re
 
+from namaz_time import fetch_prayer_times
+
+
+def update_namaz_time():
+    try:
+        # Call the function from serial_handler.py
+        output_str = fetch_prayer_times()
+
+        # Do something with the output
+        print(f"Output from namaz_code.py: {output_str}")
+
+        # Now you can send the output to your serial-connected device
+        # Replace the following line with code to send the message to /dev/ttyUSB1
+        # send_to_serial_device(output_str)
+
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+
+
 ser = None
 
 def set_serial_object(serial_object):
@@ -42,6 +62,14 @@ def fetch_current_time_online():
     except requests.exceptions.RequestException as e:
         print(f"An error occurred: {e}")
         return None
+
+def say_to_serial(serial_data):
+    try:
+        serial_data = "{hay ttgo-tcall!"+serial_data+"}"
+        print(f"sending : {serial_data}")
+        send_to_serial_port(serial_data)
+    except ser.SerialException as e:
+        print(f"An error occurred while sending data to serial port: {e}")
 
 def send_to_serial_port(serial_data):
     try:

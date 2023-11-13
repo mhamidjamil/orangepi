@@ -58,5 +58,5 @@ def fetch_current_time_online():
         print(f"An error occurred: {e}")
         return None
 
-# if __name__ == "__main__":
-#     fetch_prayer_times()
+if __name__ == "__main__":
+    fetch_prayer_times()

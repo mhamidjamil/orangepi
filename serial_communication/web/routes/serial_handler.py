@@ -3,26 +3,60 @@
 import requests
 import datetime
 import re
-
-from namaz_time import fetch_prayer_times
-
+from bs4 import BeautifulSoup
 
 def update_namaz_time():
+    global current_time
+    # Replace this URL with the actual URL of the prayer times for Lahore
+    url = "https://hamariweb.com/islam/lahore_prayer-timing5.aspx"
+    
+    # Fetch the HTML content of the webpage
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    # Fetch the current time online
     try:
-        # Call the function from serial_handler.py
-        output_str = fetch_prayer_times()
+        response = requests.get('http://worldtimeapi.org/api/timezone/Asia/Karachi')
+        data = response.json()
+        current_time = datetime.datetime.fromisoformat(data['datetime'])
+        current_time = current_time.strftime("%I:%M %p")
+        # return "10:00 AM"
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+        return
+    
+    if not current_time:
+        print("Failed to fetch current time online.")
+        return
+    # else:
+        # print(f"Current time: {current_time}")
 
-        # Do something with the output
-        print(f"Output from namaz_code.py: {output_str}")
+    # Find the prayer time row that corresponds to the next prayer after the current time
+    prayer_times = soup.find_all('td', {'data-label': True})
+    next_prayer = None
 
-        # Now you can send the output to your serial-connected device
+    for time in prayer_times:
+        prayer_time = time.text.strip()
+        if datetime.datetime.strptime(prayer_time, '%I:%M %p') > datetime.datetime.strptime(current_time, '%I:%M %p'):
+            next_prayer = time['data-label']
+            break
+
+    # Print and send the next prayer time to the serial terminal
+    if next_prayer:
+        message = f"{next_prayer}: {prayer_time}"
+        print(message)
+        say_to_serial (f"{next_prayer}: {prayer_time}")
         # Replace the following line with code to send the message to /dev/ttyUSB1
-        # send_to_serial_device(output_str)
-
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-
-
+    else:
+        fajr_element = soup.find('td', {'data-label': 'Fajr'})
+        if fajr_element:
+            fajr_time = fajr_element.text.strip()
+            fajr_time_obj = datetime.datetime.strptime(fajr_time, '%I:%M %p') - datetime.timedelta(minutes=2)
+            print(f"Fajr: {fajr_time_obj.strftime('%I:%M %p')} (?)")
+            say_to_serial("Fajr: "+fajr_time_obj.strftime('%I:%M %p'))
+        else:
+            print("Failed to find Fajr time.")
+            return None
 
 ser = None
 
@@ -85,3 +119,6 @@ def update_time():
         send_to_serial_port(current_time)
     else:
         print("Failed to fetch current time.")
+
+# if __name__ == '__main__':
+#     update_namaz_time()

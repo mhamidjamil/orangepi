@@ -1,7 +1,7 @@
 
-#$ last work 12/Nov/23 [01:22 AM]
-## version 1.0.7
-## Release Note : 2FA added
+#$ last work 13/Nov/23 [07:35 PM]
+## version 1.0.8
+## Release Note : Namaz Time will be displayed on TTGO-TCall display
 
 from flask import Flask, render_template, request
 import serial

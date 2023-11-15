@@ -4,6 +4,27 @@ import requests
 import datetime
 import re
 from bs4 import BeautifulSoup
+from pyngrok import ngrok
+
+def send_ngrok_link():
+    ngrok.set_auth_token("2WNPHddOOD72wNwXB7ENq6LWrHP_2ae6k5K68cGKP8Tepa5rt")
+
+    # Open a Ngrok tunnel to your local development server
+    tunnel = ngrok.connect(6677)
+
+    # Extract the public URL from the NgrokTunnel object
+    public_url = tunnel.public_url
+
+    # Print the Ngrok URL
+    print("Ngrok URL:", public_url)
+    
+    if public_url:
+        print(f"Ngrok URL is available: {public_url}")
+        send_to_serial_port("sms " + public_url)
+        # Perform other tasks with ngrok_url
+    else:
+        print("Failed to obtain Ngrok URL.")
+        send_to_serial_port("sms Failed to obtain Ngrok URL.")
 
 def update_namaz_time():
     global current_time

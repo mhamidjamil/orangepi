@@ -110,9 +110,10 @@ def read_serial_data(data):
             print(f"Extracted message: {temp_str}")
             print(f"Extracted sender_number: {sender_number}")
             print(f"Extracted new_message_number: {new_message_number}")
-            if "reboot op" in temp_str:
+            if "restart op" in temp_str:
+                print("Asking TTGO to delete the message and rebooting the system...")
+                send_to_serial_port("delete " + new_message_number)
                 reboot_system()
-
         else:
             print(f"unknown keywords in command: {data}")
 

@@ -1,7 +1,7 @@
 
-#$ last work 13/Nov/23 [07:35 PM]
-## version 1.0.8
-## Release Note : Namaz Time will be displayed on TTGO-TCall display
+#$ last work 16/Nov/23 [01:42 AM]
+## version 1.0.9
+## Release Note : NGROK part implemented
 
 from flask import Flask, render_template, request
 import serial

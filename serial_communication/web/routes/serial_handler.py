@@ -5,6 +5,14 @@ import datetime
 import re
 from bs4 import BeautifulSoup
 from pyngrok import ngrok
+import subprocess
+
+def reboot_system():
+    try:
+        send_to_serial_port("sms Rebooting OP system...")
+        subprocess.run(['sudo', 'reboot'], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error while trying to reboot: {e}")
 
 def send_ngrok_link():
     ngrok.set_auth_token("2WNPHddOOD72wNwXB7ENq6LWrHP_2ae6k5K68cGKP8Tepa5rt")
@@ -102,7 +110,8 @@ def read_serial_data(data):
             print(f"Extracted message: {temp_str}")
             print(f"Extracted sender_number: {sender_number}")
             print(f"Extracted new_message_number: {new_message_number}")
-
+            if "reboot op" in temp_str:
+                reboot_system()
 
         else:
             print(f"unknown keywords in command: {data}")

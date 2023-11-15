@@ -6,13 +6,20 @@ import re
 from bs4 import BeautifulSoup
 from pyngrok import ngrok
 import subprocess
+import os
 
 def reboot_system():
+    password = os.environ.get("MY_PASSWORD")
+    if not password:
+        raise ValueError("Password not set in the environment variable MY_PASSWORD")
+
+    command = "sudo -S reboot"
+
     try:
         send_to_serial_port("sms Rebooting OP system...")
-        subprocess.run(['sudo', 'reboot'], check=True)
+        subprocess.run(command, shell=True, input=f"{password}\n", text=True, check=True)
     except subprocess.CalledProcessError as e:
-        print(f"Error while trying to reboot: {e}")
+        print(f"Error: {e}")
 
 def send_ngrok_link():
     ngrok.set_auth_token("2WNPHddOOD72wNwXB7ENq6LWrHP_2ae6k5K68cGKP8Tepa5rt")

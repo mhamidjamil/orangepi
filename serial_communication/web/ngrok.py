@@ -1,18 +1,18 @@
-import subprocess
+from pyngrok import ngrok
 
 def start_ngrok():
     try:
-        # Run Ngrok command and capture the output
-        ngrok_process = subprocess.Popen(['ngrok', 'http', '192.168.1.238:6677'], stdout=subprocess.PIPE)
+        # Set the Ngrok auth token (replace 'your_auth_token' with your actual Ngrok auth token)
+        ngrok.set_auth_token("2WNPHddOOD72wNwXB7ENq6LWrHP_2ae6k5K68cGKP8Tepa5rt")
 
-        # Read the output of the command
-        output, error = ngrok_process.communicate()
-
-        # Decode the byte output to a string
-        ngrok_output = output.decode('utf-8')
+        # Open a Ngrok tunnel to your local development server
+        public_url = ngrok.connect(6677)
 
         # Print the Ngrok URL
-        print("Ngrok URL:", ngrok_output)
+        print("Ngrok URL:", public_url)
+
+        # Keep the program running to maintain the tunnel
+        input("Press Enter to exit...")
 
     except Exception as e:
         print(f"An error occurred: {e}")

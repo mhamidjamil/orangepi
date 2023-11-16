@@ -1,7 +1,7 @@
 
-#$ last work 13/Nov/23 [07:35 PM]
-## version 1.0.8
-## Release Note : Namaz Time will be displayed on TTGO-TCall display
+#$ last work 16/Nov/23 [11:51 PM]
+## version 1.0.9.3
+## Release Note : NGROK part implemented FIX#3
 
 from flask import Flask, render_template, request
 import serial
@@ -9,7 +9,7 @@ import serial.tools.list_ports
 import schedule
 import threading
 import time
-from routes.serial_handler import set_serial_object, read_serial_data, update_time, update_namaz_time
+from routes.serial_handler import set_serial_object, read_serial_data, update_time, update_namaz_time, send_ngrok_link
 from routes.routes import send_auth
 
 app = Flask(__name__)
@@ -70,7 +70,15 @@ def update_schedule():
         schedule.run_pending()
         time.sleep(1)
 
+def delayed_execution():
+    # Delay for 5 seconds
+    time.sleep(20)
+    # Call the function after the delay
+    send_ngrok_link()
+
 if __name__ == '__main__':
     thread = threading.Thread(target=update_schedule)
     thread.start()
+    timer_thread = threading.Timer(5, delayed_execution)
+    timer_thread.start()
     app.run(host='0.0.0.0', port=6677, debug=True)

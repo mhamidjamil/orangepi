@@ -3,7 +3,47 @@
 import requests
 import datetime
 import re
+import time
 from bs4 import BeautifulSoup
+from pyngrok import ngrok
+import subprocess
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+def reboot_system():
+    password = os.getenv("MY_PASSWORD")
+    if not password:
+        raise ValueError("Password not set in the .env file")
+
+    command = "sudo -S reboot"
+
+    try:
+        send_to_serial_port("sms Rebooting OP system...")
+        subprocess.run(command, shell=True, input=f"{password}\n", text=True, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
+
+def send_ngrok_link():
+    ngrok.set_auth_token("2WNPHddOOD72wNwXB7ENq6LWrHP_2ae6k5K68cGKP8Tepa5rt")
+
+    # Open a Ngrok tunnel to your local development server
+    tunnel = ngrok.connect(6677)
+
+    # Extract the public URL from the NgrokTunnel object
+    public_url = tunnel.public_url
+
+    # Print the Ngrok URL
+    print("Ngrok URL:", public_url)
+    
+    if public_url:
+        print(f"Ngrok URL is available: {public_url}")
+        send_to_serial_port("sms " + public_url)
+        # Perform other tasks with ngrok_url
+    else:
+        print("Failed to obtain Ngrok URL.")
+        send_to_serial_port("sms Failed to obtain Ngrok URL.")
 
 def update_namaz_time():
     global current_time
@@ -81,8 +121,11 @@ def read_serial_data(data):
             print(f"Extracted message: {temp_str}")
             print(f"Extracted sender_number: {sender_number}")
             print(f"Extracted new_message_number: {new_message_number}")
-
-
+            if "restart op" in temp_str:
+                print(f"Asking TTGO to delete the message {new_message_number} and rebooting the system...")
+                send_to_serial_port("delete " + new_message_number)
+                time.sleep(3)
+                reboot_system()
         else:
             print(f"unknown keywords in command: {data}")
 

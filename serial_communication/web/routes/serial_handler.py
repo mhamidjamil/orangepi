@@ -3,15 +3,19 @@
 import requests
 import datetime
 import re
+import time
 from bs4 import BeautifulSoup
 from pyngrok import ngrok
 import subprocess
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def reboot_system():
-    password = os.environ.get("MY_PASSWORD")
+    password = os.getenv("MY_PASSWORD")
     if not password:
-        raise ValueError("Password not set in the environment variable MY_PASSWORD")
+        raise ValueError("Password not set in the .env file")
 
     command = "sudo -S reboot"
 
@@ -118,8 +122,9 @@ def read_serial_data(data):
             print(f"Extracted sender_number: {sender_number}")
             print(f"Extracted new_message_number: {new_message_number}")
             if "restart op" in temp_str:
-                print("Asking TTGO to delete the message and rebooting the system...")
+                print(f"Asking TTGO to delete the message {new_message_number} and rebooting the system...")
                 send_to_serial_port("delete " + new_message_number)
+                time.sleep(3)
                 reboot_system()
         else:
             print(f"unknown keywords in command: {data}")

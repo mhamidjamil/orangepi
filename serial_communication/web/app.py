@@ -1,7 +1,7 @@
 
-#$ last work 16/Nov/23 [01:42 AM]
-## version 1.0.9
-## Release Note : NGROK part implemented
+#$ last work 16/Nov/23 [11:51 PM]
+## version 1.0.9.3
+## Release Note : NGROK part implemented FIX#3
 
 from flask import Flask, render_template, request
 import serial
@@ -72,7 +72,7 @@ def update_schedule():
 
 def delayed_execution():
     # Delay for 5 seconds
-    time.sleep(5)
+    time.sleep(20)
     # Call the function after the delay
     send_ngrok_link()
 

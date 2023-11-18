@@ -51,7 +51,7 @@ def send_ngrok_link():
 def update_namaz_time():
     global current_time
     # Replace this URL with the actual URL of the prayer times for Lahore
-    url = "https://hamariweb.com/islam/lahore_prayer-timing5.aspx"
+    url = os.getenv("LAHORE_NAMAZ_TIME")
     
     # Fetch the HTML content of the webpage
     response = requests.get(url)

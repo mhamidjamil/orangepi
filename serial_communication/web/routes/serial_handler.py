@@ -11,6 +11,7 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+ngrok_link = ""
 
 def reboot_system():
     password = os.getenv("MY_PASSWORD")
@@ -26,7 +27,8 @@ def reboot_system():
         print(f"Error: {e}")
 
 def send_ngrok_link():
-    ngrok.set_auth_token("2WNPHddOOD72wNwXB7ENq6LWrHP_2ae6k5K68cGKP8Tepa5rt")
+    global ngrok_link
+    ngrok.set_auth_token("NGROK_TOKKEN")
 
     # Open a Ngrok tunnel to your local development server
     tunnel = ngrok.connect(6677)
@@ -40,6 +42,7 @@ def send_ngrok_link():
     if public_url:
         print(f"Ngrok URL is available: {public_url}")
         send_to_serial_port("sms " + public_url)
+        ngrok_link = public_url
         # Perform other tasks with ngrok_url
     else:
         print("Failed to obtain Ngrok URL.")
@@ -48,7 +51,7 @@ def send_ngrok_link():
 def update_namaz_time():
     global current_time
     # Replace this URL with the actual URL of the prayer times for Lahore
-    url = "https://hamariweb.com/islam/lahore_prayer-timing5.aspx"
+    url = os.getenv("LAHORE_NAMAZ_TIME")
     
     # Fetch the HTML content of the webpage
     response = requests.get(url)
@@ -105,6 +108,7 @@ def set_serial_object(serial_object):
     ser = serial_object
 
 def read_serial_data(data):
+    global ngrok_link
     if "{hay orange-pi!" in data:
         if "send time" in data or "update time" in data or "send updated time" in data:
             update_time()
@@ -126,6 +130,11 @@ def read_serial_data(data):
                 send_to_serial_port("delete " + new_message_number)
                 time.sleep(3)
                 reboot_system()
+            elif "send ngrok link" in temp_str:
+                print(f"Asking TTGO to delete the message {new_message_number} and sending ngrok link...")
+                send_to_serial_port("delete " + new_message_number)
+                print(f"ngrok link: {ngrok_link}")
+                send_ngrok_link()
         else:
             print(f"unknown keywords in command: {data}")
 

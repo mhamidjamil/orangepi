@@ -28,7 +28,7 @@ def reboot_system():
 
 def send_ngrok_link():
     global ngrok_link
-    ngrok.set_auth_token("NGROK_TOKKEN")
+    ngrok.set_auth_token(os.getenv("NGROK_TOKKEN"))
 
     # Open a Ngrok tunnel to your local development server
     tunnel = ngrok.connect(6677)
@@ -135,6 +135,8 @@ def read_serial_data(data):
                 send_to_serial_port("delete " + new_message_number)
                 print(f"ngrok link: {ngrok_link}")
                 send_ngrok_link()
+        elif "send bypass key" in data: 
+            say_to_serial("bypass key: " + os.getenv("BYPASS_KEY"))
         else:
             print(f"unknown keywords in command: {data}")
 

@@ -1,6 +1,6 @@
 
-#$ last work 03/Dec/23 [02:51 PM]
-## version 1.0.9.5
+#$ last work 03/Dec/23 [06:07 PM]
+## version 1.0.9.6
 ## Release Note : NGROK part scheduling depreciated
 
 from flask import Flask, render_template, request

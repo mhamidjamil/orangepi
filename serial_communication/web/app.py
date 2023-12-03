@@ -1,6 +1,6 @@
 
-#$ last work 03/Dec/23 [02:38 PM]
-## version 1.0.9.4
+#$ last work 03/Dec/23 [02:51 PM]
+## version 1.0.9.5
 ## Release Note : NGROK part scheduling depreciated
 
 from flask import Flask, render_template, request
@@ -80,5 +80,5 @@ if __name__ == '__main__':
     thread = threading.Thread(target=update_schedule)
     thread.start()
     # timer_thread = threading.Timer(5, delayed_execution)
-    timer_thread.start()
+    # timer_thread.start()
     app.run(host='0.0.0.0', port=6677, debug=True)

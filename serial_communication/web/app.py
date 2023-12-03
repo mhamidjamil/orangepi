@@ -1,7 +1,7 @@
 
-#$ last work 16/Nov/23 [11:51 PM]
-## version 1.0.9.3
-## Release Note : NGROK part implemented FIX#3
+#$ last work 03/Dec/23 [02:38 PM]
+## version 1.0.9.4
+## Release Note : NGROK part scheduling depreciated
 
 from flask import Flask, render_template, request
 import serial
@@ -70,15 +70,15 @@ def update_schedule():
         schedule.run_pending()
         time.sleep(1)
 
-def delayed_execution():
-    # Delay for 5 seconds
-    time.sleep(20)
-    # Call the function after the delay
-    send_ngrok_link()
+# def delayed_execution():
+#     # Delay for 5 seconds
+#     time.sleep(20)
+#     # Call the function after the delay
+#     send_ngrok_link()
 
 if __name__ == '__main__':
     thread = threading.Thread(target=update_schedule)
     thread.start()
-    timer_thread = threading.Timer(5, delayed_execution)
+    # timer_thread = threading.Timer(5, delayed_execution)
     timer_thread.start()
     app.run(host='0.0.0.0', port=6677, debug=True)

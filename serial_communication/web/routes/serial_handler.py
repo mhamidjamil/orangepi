@@ -28,7 +28,7 @@ def reboot_system():
 
 def send_ngrok_link():
     global ngrok_link
-    ngrok.set_auth_token("2WNPHddOOD72wNwXB7ENq6LWrHP_2ae6k5K68cGKP8Tepa5rt")
+    ngrok.set_auth_token("NGROK_TOKKEN")
 
     # Open a Ngrok tunnel to your local development server
     tunnel = ngrok.connect(6677)

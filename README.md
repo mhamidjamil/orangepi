@@ -12,7 +12,7 @@ This is a simple web application that allows you to view and interact with seria
    Make sure you have Python, Flask, and PySerial installed.
 
    ```bash
-   pip install flask pyserial
+   pip install Flask pyserial schedule requests beautifulsoup4 pyngrok python-dotenv
    ```
 
 2. **Run the App:**
@@ -38,6 +38,7 @@ This is a simple web application that allows you to view and interact with seria
 - Python
 - Flask
 - PySerial
+- see [discussions](https://github.com/mhamidjamil/orangePi/discussions/15) for more details
 
 ## License
 

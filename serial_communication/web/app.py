@@ -1,7 +1,7 @@
 
-#$ last work 03/Dec/23 [06:07 PM]
-## version 1.0.9.6
-## Release Note : NGROK part scheduling depreciated
+#$ last work 01/Jan/24 [12:50 AM]
+## version 1.1
+## Release Note : Auto port selection on module disconnection
 
 from flask import Flask, render_template, request
 import serial
@@ -11,7 +11,7 @@ import threading
 import time
 from routes.serial_handler import set_serial_object, read_serial_data, update_time, update_namaz_time, send_ngrok_link
 from routes.routes import send_auth
-
+bg_tasks = True
 app = Flask(__name__)
 
 # Function to get a list of available serial ports
@@ -19,15 +19,31 @@ app = Flask(__name__)
 def get_serial_ports():
     return [{'port': port.device, 'baud_rate': 115200} for port in serial.tools.list_ports.comports() if port.device.startswith('/dev/tty')]
 
+# Function to update the serial port dynamically
+def update_serial_port():
+    global bg_tasks, ser
+    max_port_number = 5  # Maximum port number to try
+    port_pattern = '/dev/ttyACM{}'
+    print("Trying to connect to port!")
+    while True:
+        for port_number in range(max_port_number):
+            port = port_pattern.format(port_number)
+            try:
+                temp_ser = serial.Serial(port, baudrate=115200, timeout=1)
+                ser = temp_ser
+                print(f"Connected to {port}")
+                set_serial_object(ser)
+                bg_tasks = True
+                return temp_ser
+            except serial.SerialException:
+                print(f"Port {port} not available. Trying the next one.")
+
+        print(f"No available ports (tried up to {max_port_number}). Retrying in 10 seconds...")
+        time.sleep(10)
+        update_serial_port() #TODO: this effect execution flow
+
 # Replace with the default serial port
-default_serial_port = '/dev/ttyACM0'
-ser = None
-try:
-    ser = serial.Serial(default_serial_port, 115200)
-    set_serial_object(ser)
-except serial.SerialException as e:
-    print(f"An error occurred while opening the serial port: {e}")
-    ser = None
+ser = update_serial_port()
 
 @app.route('/')
 def index():
@@ -37,20 +53,27 @@ def index():
     # Baud rates to be displayed in the dropdown
     baud_rates = [9600, 115200, 230400, 460800, 921600]
 
-    return render_template('index.html', default_port=default_serial_port, available_ports=available_ports, baud_rates=baud_rates)
+    return render_template('index.html', default_port=ser, available_ports=available_ports, baud_rates=baud_rates)
 
 @app.route('/read_serial')
 def read_serial():
-    if ser:
-        try:
-            data = ser.readline().decode('utf-8')
-            read_serial_data(data)
+    global bg_tasks
+    try:
+        if ser:
+            try:
+                data = ser.readline().decode('utf-8')
+                read_serial_data(data)
 
-            return {'data': data.strip()}  # Strip whitespace from the data
-        except UnicodeDecodeError:
-            return {'error': 'Error decoding serial data'}
-    else:
-        return {'error': 'Serial port not accessible'}
+                return {'data': data.strip()}  # Strip whitespace from the data
+            except UnicodeDecodeError:
+                return {'error': 'Error decoding serial data'}
+        else:
+            return {'error': 'Serial port not accessible'}
+    except serial.SerialException as e:
+        print(f"#1: Error reading from serial port: {e}")
+        bg_tasks = False
+        update_serial_port()
+        return {'error': 'Error reading from serial port'}
 
 @app.route('/send_serial', methods=['POST'])
 def send_serial():
@@ -62,8 +85,9 @@ def send_serial():
 def send_auth_route():
     return send_auth()
 
-schedule.every(2).minutes.do(update_time)
-schedule.every(1).minutes.do(update_namaz_time)
+if bg_tasks: 
+    schedule.every(2).minutes.do(update_time) 
+    schedule.every(5).minutes.do(update_namaz_time) #TODO: implement array
 
 def update_schedule():
     while True:

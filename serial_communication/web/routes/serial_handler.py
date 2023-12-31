@@ -108,38 +108,41 @@ def set_serial_object(serial_object):
     ser = serial_object
 
 def read_serial_data(data):
-    global ngrok_link
-    if "{hay orange-pi!" in data:
-        if "send time" in data or "update time" in data or "send updated time" in data:
-            update_time()
-        elif "send ip" in data or "update ip" in data or "my ip" in data:
-            ip = requests.get('https://api.ipify.org').text
-            msg = '{hay ttgo-tcall! here is the ip: ' + ip + '.}'
-            print(f"sending : {msg}")
-            send_to_serial_port(msg)
-        elif "untrained_message:" in data:
-            temp_str = re.search(r'untrained_message:(.*?) from', data).group(1).strip()
-            sender_number = re.search(r'from : {_([^_]*)_', data).group(1)
-            new_message_number = re.search(r'<_(\d+)_>', data).group(1)
+    try:
+        global ngrok_link
+        if "{hay orange-pi!" in data:
+            if "send time" in data or "update time" in data or "send updated time" in data:
+                update_time()
+            elif "send ip" in data or "update ip" in data or "my ip" in data:
+                ip = requests.get('https://api.ipify.org').text
+                msg = '{hay ttgo-tcall! here is the ip: ' + ip + '.}'
+                print(f"sending : {msg}")
+                send_to_serial_port(msg)
+            elif "untrained_message:" in data:
+                temp_str = re.search(r'untrained_message:(.*?) from', data).group(1).strip()
+                sender_number = re.search(r'from : {_([^_]*)_', data).group(1)
+                new_message_number = re.search(r'<_(\d+)_>', data).group(1)
 
-            print(f"Extracted message: {temp_str}")
-            print(f"Extracted sender_number: {sender_number}")
-            print(f"Extracted new_message_number: {new_message_number}")
-            if "restart op" in temp_str:
-                print(f"Asking TTGO to delete the message {new_message_number} and rebooting the system...")
-                send_to_serial_port("delete " + new_message_number)
-                time.sleep(3)
-                reboot_system()
-            elif "send ngrok link" in temp_str:
-                print(f"Asking TTGO to delete the message {new_message_number} and sending ngrok link...")
-                send_to_serial_port("delete " + new_message_number)
-                print(f"ngrok link: {ngrok_link}")
-                send_ngrok_link()
-        elif "send bypass key" in data: 
-            say_to_serial("bypass key: " + os.getenv("BYPASS_KEY"))
-        else:
-            print(f"unknown keywords in command: {data}")
-
+                print(f"Extracted message: {temp_str}")
+                print(f"Extracted sender_number: {sender_number}")
+                print(f"Extracted new_message_number: {new_message_number}")
+                if "restart op" in temp_str:
+                    print(f"Asking TTGO to delete the message {new_message_number} and rebooting the system...")
+                    send_to_serial_port("delete " + new_message_number)
+                    time.sleep(3)
+                    reboot_system()
+                elif "send ngrok link" in temp_str:
+                    print(f"Asking TTGO to delete the message {new_message_number} and sending ngrok link...")
+                    send_to_serial_port("delete " + new_message_number)
+                    print(f"ngrok link: {ngrok_link}")
+                    send_ngrok_link()
+            elif "send bypass key" in data: 
+                say_to_serial("bypass key: " + os.getenv("BYPASS_KEY"))
+            else:
+                print(f"unknown keywords in command: {data}")
+    except serial.SerialException as e:
+        print(f"#2 Error reading from serial port: {e}")
+        return {'error': 'Error reading from serial port'}
 def fetch_current_time_online():
     try:
         response = requests.get('http://worldtimeapi.org/api/timezone/Asia/Karachi')

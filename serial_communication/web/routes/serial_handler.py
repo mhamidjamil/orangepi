@@ -101,11 +101,11 @@ def update_namaz_time():
             print("Failed to find Fajr time.")
             return None
 
-ser = None
+serial = None
 
 def set_serial_object(serial_object):
-    global ser
-    ser = serial_object
+    global serial
+    serial = serial_object
 
 def read_serial_data(data):
     try:
@@ -142,7 +142,7 @@ def read_serial_data(data):
                 print(f"unknown keywords in command: {data}")
     except serial.SerialException as e:
         print(f"#2 Error reading from serial port: {e}")
-        return {'error': 'Error reading from serial port'}
+
 def fetch_current_time_online():
     try:
         response = requests.get('http://worldtimeapi.org/api/timezone/Asia/Karachi')
@@ -159,14 +159,14 @@ def say_to_serial(serial_data):
         serial_data = "{hay ttgo-tcall!"+serial_data+"}"
         print(f"sending : {serial_data}")
         send_to_serial_port(serial_data)
-    except ser.SerialException as e:
+    except serial.SerialException as e:
         print(f"An error occurred while sending data to serial port: {e}")
 
 def send_to_serial_port(serial_data):
     try:
         print(f"Sending data to serial port: {serial_data}")
-        ser.write(serial_data.encode())
-    except ser.SerialException as e:
+        serial.write(serial_data.encode())
+    except serial.SerialException as e:
         print(f"An error occurred while sending data to serial port: {e}")
 
 def update_time():

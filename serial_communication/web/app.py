@@ -1,7 +1,7 @@
 
-#$ last work 01/Jan/24 [12:50 AM]
-## version 1.1
-## Release Note : Auto port selection on module disconnection
+#$ last work 02/Jan/24 [11:33 PM]
+## version 1.1.1
+## Release Note : Serial name convention issue fix
 
 from flask import Flask, render_template, request
 import serial

@@ -9,9 +9,12 @@ from pyngrok import ngrok
 import subprocess
 import os
 from dotenv import load_dotenv
+import serial
 
 load_dotenv()
 ngrok_link = ""
+
+ser = None
 
 def reboot_system():
     password = os.getenv("MY_PASSWORD")
@@ -84,7 +87,7 @@ def update_namaz_time():
             next_prayer = time['data-label']
             break
 
-    # Print and send the next prayer time to the serial terminal
+    # Print and send the next prayer time to the ser terminal
     if next_prayer:
         message = f"{next_prayer}: {prayer_time}"
         print(message)
@@ -101,11 +104,9 @@ def update_namaz_time():
             print("Failed to find Fajr time.")
             return None
 
-serial = None
-
 def set_serial_object(serial_object):
-    global serial
-    serial = serial_object
+    global ser
+    ser = serial_object
 
 def read_serial_data(data):
     try:
@@ -140,8 +141,8 @@ def read_serial_data(data):
                 say_to_serial("bypass key: " + os.getenv("BYPASS_KEY"))
             else:
                 print(f"unknown keywords in command: {data}")
-    except serial.SerialException as e:
-        print(f"#2 Error reading from serial port: {e}")
+    except Exception as e:
+        print(f"An error occurred in read_serial_data function: {e}")
 
 def fetch_current_time_online():
     try:
@@ -159,15 +160,16 @@ def say_to_serial(serial_data):
         serial_data = "{hay ttgo-tcall!"+serial_data+"}"
         print(f"sending : {serial_data}")
         send_to_serial_port(serial_data)
-    except serial.SerialException as e:
-        print(f"An error occurred while sending data to serial port: {e}")
+    except Exception as e:
+        print(f"An error occurred in say_to_serial function: {e}")
 
 def send_to_serial_port(serial_data):
+    # global serial
     try:
         print(f"Sending data to serial port: {serial_data}")
-        serial.write(serial_data.encode())
-    except serial.SerialException as e:
-        print(f"An error occurred while sending data to serial port: {e}")
+        ser.write(serial_data.encode())
+    except serial.SerialException:
+        print("Serial communication error #172")
 
 def update_time():
     current_time = fetch_current_time_online()

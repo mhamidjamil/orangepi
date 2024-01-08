@@ -9,9 +9,14 @@ from pyngrok import ngrok
 import subprocess
 import os
 from dotenv import load_dotenv
+import serial
 
 load_dotenv()
 ngrok_link = ""
+logs_receiving = False
+log_data = ""
+
+ser = None
 
 def reboot_system():
     password = os.getenv("MY_PASSWORD")
@@ -84,7 +89,7 @@ def update_namaz_time():
             next_prayer = time['data-label']
             break
 
-    # Print and send the next prayer time to the serial terminal
+    # Print and send the next prayer time to the ser terminal
     if next_prayer:
         message = f"{next_prayer}: {prayer_time}"
         print(message)
@@ -101,17 +106,27 @@ def update_namaz_time():
             print("Failed to find Fajr time.")
             return None
 
-serial = None
-
 def set_serial_object(serial_object):
-    global serial
-    serial = serial_object
+    global ser
+    ser = serial_object
 
 def read_serial_data(data):
+    global logs_receiving, log_data
     try:
         global ngrok_link
         if "{hay orange-pi!" in data:
-            if "send time" in data or "update time" in data or "send updated time" in data:
+            if "[#SaveIt]:" in data or logs_receiving:
+                logs_receiving = True
+                log_data += data
+                if "end_of_file" in data:
+                    logs_receiving = False
+                    with open('logs.txt', 'a') as file:
+                        file.write(log_data)
+                        file.write(fetch_current_time_online())
+                        file.flush()  # Ensure the data is written to the file immediately
+                        file.close()  # Close the file explicitly
+                        log_data = ""
+            elif "send time" in data or "update time" in data or "send updated time" in data:
                 update_time()
             elif "send ip" in data or "update ip" in data or "my ip" in data:
                 ip = requests.get('https://api.ipify.org').text
@@ -140,8 +155,8 @@ def read_serial_data(data):
                 say_to_serial("bypass key: " + os.getenv("BYPASS_KEY"))
             else:
                 print(f"unknown keywords in command: {data}")
-    except serial.SerialException as e:
-        print(f"#2 Error reading from serial port: {e}")
+    except Exception as e:
+        print(f"An error occurred in read_serial_data function: {e}")
 
 def fetch_current_time_online():
     try:
@@ -159,15 +174,16 @@ def say_to_serial(serial_data):
         serial_data = "{hay ttgo-tcall!"+serial_data+"}"
         print(f"sending : {serial_data}")
         send_to_serial_port(serial_data)
-    except serial.SerialException as e:
-        print(f"An error occurred while sending data to serial port: {e}")
+    except Exception as e:
+        print(f"An error occurred in say_to_serial function: {e}")
 
 def send_to_serial_port(serial_data):
+    # global serial
     try:
         print(f"Sending data to serial port: {serial_data}")
-        serial.write(serial_data.encode())
-    except serial.SerialException as e:
-        print(f"An error occurred while sending data to serial port: {e}")
+        ser.write(serial_data.encode())
+    except serial.SerialException:
+        print("Serial communication error #172")
 
 def update_time():
     current_time = fetch_current_time_online()

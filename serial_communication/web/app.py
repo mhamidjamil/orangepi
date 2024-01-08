@@ -1,4 +1,5 @@
 
+
 #$ last work 08/Jan/24 [07:43 PM]
 ## version 2.0
 ## Release Note : Serial Communication rework and auto connection to ttgo logger functionality added

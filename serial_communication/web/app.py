@@ -1,7 +1,7 @@
 
-#$ last work 02/Jan/24 [11:33 PM]
-## version 1.1.1
-## Release Note : Serial name convention issue fix
+#$ last work 08/Jan/24 [07:43 PM]
+## version 2.0
+## Release Note : Serial Communication rework and auto connection to ttgo logger functionality added
 
 from flask import Flask, render_template, request
 import serial

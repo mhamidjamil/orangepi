@@ -32,26 +32,34 @@ def reboot_system():
         print(f"Error: {e}")
 
 def send_ngrok_link():
-    global ngrok_link
-    ngrok.set_auth_token(os.getenv("NGROK_TOKKEN"))
+    try:
+        global ngrok_link
+        ngrok.set_auth_token(os.getenv("NGROK_TOKKEN"))
 
-    # Open a Ngrok tunnel to your local development server
-    tunnel = ngrok.connect(6677)
+        # Open a Ngrok tunnel to your local development server
+        tunnel = ngrok.connect(8069)
 
-    # Extract the public URL from the NgrokTunnel object
-    public_url = tunnel.public_url
+        # Extract the public URL from the NgrokTunnel object
+        public_url = tunnel.public_url
 
-    # Print the Ngrok URL
-    print("Ngrok URL:", public_url)
-    
-    if public_url:
-        print(f"Ngrok URL is available: {public_url}")
-        send_to_serial_port("sms " + public_url)
-        ngrok_link = public_url
-        # Perform other tasks with ngrok_url
-    else:
-        print("Failed to obtain Ngrok URL.")
-        send_to_serial_port("sms Failed to obtain Ngrok URL.")
+        # Print the Ngrok URL
+        print("Ngrok URL:", public_url)
+        
+        if public_url:
+            print(f"Ngrok URL is available: {public_url}")
+            send_to_serial_port("sms " + public_url)
+            ngrok_link = public_url
+            # Perform other tasks with ngrok_url
+        else:
+            print("Failed to obtain Ngrok URL.")
+            send_to_serial_port("sms Failed to obtain Ngrok URL.")
+    except Exception as e:
+        print("NGROK not initialized")
+        with open('ngrok_logger.txt', 'a') as file:
+            file.write(str(e))
+            file.write(fetch_current_time_online())
+            file.flush()  # Ensure the data is written to the file immediately
+            file.close()
 
 def update_namaz_time():
     global current_time
@@ -193,5 +201,5 @@ def update_time():
     else:
         print("Failed to fetch current time.")
 
-# if __name__ == '__main__':
-#     update_namaz_time()
+if __name__ == '__main__':
+    update_namaz_time()

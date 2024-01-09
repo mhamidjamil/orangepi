@@ -13,6 +13,8 @@ import time
 from routes.serial_handler import set_serial_object, read_serial_data, update_time, update_namaz_time, send_ngrok_link
 from routes.routes import send_auth
 bg_tasks = True
+ngrok_link_sent = False
+
 app = Flask(__name__)
 
 # Function to get a list of available serial ports
@@ -95,6 +97,16 @@ def update_schedule():
         schedule.run_pending()
         time.sleep(1)
 
+def ngrok_updater():
+    global ngrok_link_sent
+    
+    # Delay the execution of send_ngrok_link() by 5 minutes
+    
+    # Check if send_ngrok_link() has not been called yet
+    if not ngrok_link_sent:
+        time.sleep(300)
+        send_ngrok_link()
+        ngrok_link_sent = True
 # def delayed_execution():
 #     # Delay for 5 seconds
 #     time.sleep(20)
@@ -103,7 +115,9 @@ def update_schedule():
 
 if __name__ == '__main__':
     thread = threading.Thread(target=update_schedule)
+    thread2 = threading.Thread(target=ngrok_updater)
     thread.start()
+    thread2.start()
     # timer_thread = threading.Timer(5, delayed_execution)
     # timer_thread.start()
     app.run(host='0.0.0.0', port=6677, debug=True)

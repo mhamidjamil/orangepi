@@ -1,8 +1,8 @@
 
 
-#$ last work 08/Jan/24 [07:43 PM]
-## version 2.0
-## Release Note : Serial Communication rework and auto connection to ttgo logger functionality added
+#$ last work 16/Jan/24 [01:40 AM]
+## version 2.0.1
+## Release Note : NGROK reWork
 
 from flask import Flask, render_template, request
 import serial

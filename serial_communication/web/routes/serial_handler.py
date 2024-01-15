@@ -34,7 +34,9 @@ def reboot_system():
 def send_ngrok_link():
     try:
         global ngrok_link
-        ngrok.set_auth_token(os.getenv("NGROK_TOKKEN"))
+        stop_ngrok()
+        time.sleep(2)
+        ngrok.set_auth_token(os.getenv("NGROK_TOKEN"))
 
         # Open a Ngrok tunnel to your local development server
         tunnel = ngrok.connect(8069)
@@ -56,8 +58,9 @@ def send_ngrok_link():
     except Exception as e:
         print("NGROK not initialized")
         with open('ngrok_logger.txt', 'a') as file:
-            file.write(str(e))
-            file.write(fetch_current_time_online())
+            file.write("\n"+"ERROR:\n")
+            file.write(str(e)+"\nTime stamp:{")
+            file.write(fetch_current_time_online()+ "}\n")
             file.flush()  # Ensure the data is written to the file immediately
             file.close()
 
@@ -130,7 +133,7 @@ def read_serial_data(data):
                     logs_receiving = False
                     with open('logs.txt', 'a') as file:
                         file.write(log_data)
-                        file.write(fetch_current_time_online())
+                        file.write(fetch_current_time_online()+ "\n")
                         file.flush()  # Ensure the data is written to the file immediately
                         file.close()  # Close the file explicitly
                         log_data = ""
@@ -201,5 +204,9 @@ def update_time():
     else:
         print("Failed to fetch current time.")
 
-if __name__ == '__main__':
-    update_namaz_time()
+def stop_ngrok():
+    print("killing ngrok server...")
+    subprocess.run(['pkill', '-f', 'ngrok'])
+
+# if __name__ == '__main__':
+#     update_namaz_time()

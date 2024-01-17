@@ -29,6 +29,7 @@ def reboot_system():
         send_to_serial_port("sms Rebooting OP system...")
         subprocess.run(command, shell=True, input=f"{password}\n", text=True, check=True)
     except subprocess.CalledProcessError as e:
+        write_in_file("exceptions.txt", "\nException in reboot_system():\n" + str(e) + "\nTime stamp: {"+fetch_current_time_online()+ "}\n")
         print(f"Error: {e}")
 
 def send_ngrok_link():
@@ -57,12 +58,7 @@ def send_ngrok_link():
             send_to_serial_port("sms Failed to obtain Ngrok URL.")
     except Exception as e:
         print("NGROK not initialized")
-        with open('ngrok_logger.txt', 'a') as file:
-            file.write("\n"+"ERROR:\n")
-            file.write(str(e)+"\nTime stamp:{")
-            file.write(fetch_current_time_online()+ "}\n")
-            file.flush()  # Ensure the data is written to the file immediately
-            file.close()
+        write_in_file("ngrok_logger.txt", "\nERROR:\n" + str(e) + "\nTime stamp: {"+fetch_current_time_online()+ "}\n")
 
 def update_namaz_time():
     global current_time
@@ -125,18 +121,16 @@ def read_serial_data(data):
     global logs_receiving, log_data
     try:
         global ngrok_link
-        if "{hay orange-pi!" in data:
+        if "{hay orange-pi!" in data or logs_receiving:
             if "[#SaveIt]:" in data or logs_receiving:
                 logs_receiving = True
+                print("receiving logs...")
                 log_data += data
                 if "end_of_file" in data:
                     logs_receiving = False
-                    with open('logs.txt', 'a') as file:
-                        file.write(log_data)
-                        file.write(fetch_current_time_online()+ "\n")
-                        file.flush()  # Ensure the data is written to the file immediately
-                        file.close()  # Close the file explicitly
-                        log_data = ""
+                    print("logs received saving them")
+                    write_in_file("logs.txt", "\nLogs:\n" + log_data + "\nTime stamp: {"+fetch_current_time_online()+ "}\n")
+                    log_data = ""
             elif "send time" in data or "update time" in data or "send updated time" in data:
                 update_time()
             elif "send ip" in data or "update ip" in data or "my ip" in data:
@@ -168,6 +162,7 @@ def read_serial_data(data):
                 print(f"unknown keywords in command: {data}")
     except Exception as e:
         print(f"An error occurred in read_serial_data function: {e}")
+        write_in_file("exceptions.txt", "\nException in read_serial_data():\n" + str(e) + "\nTime stamp: {"+fetch_current_time_online()+ "}\n")
 
 def fetch_current_time_online():
     try:
@@ -178,6 +173,7 @@ def fetch_current_time_online():
         return f"py_time:{formatted_time}+20"
     except requests.exceptions.RequestException as e:
         print(f"An error occurred: {e}")
+        write_in_file("exceptions.txt", "\nException in fetch_current_time_online():\n" + str(e) + "\nTime stamp: {"+fetch_current_time_online()+ "}\n")
         return None
 
 def say_to_serial(serial_data):
@@ -195,6 +191,7 @@ def send_to_serial_port(serial_data):
         ser.write(serial_data.encode())
     except serial.SerialException:
         print("Serial communication error #172")
+        write_in_file("exceptions.txt", "\nException in send_to_serial_port():\n" + str(e) + "\nTime stamp: {"+fetch_current_time_online()+ "}\n")
 
 def update_time():
     current_time = fetch_current_time_online()
@@ -208,5 +205,26 @@ def stop_ngrok():
     print("killing ngrok server...")
     subprocess.run(['pkill', '-f', 'ngrok'])
 
+def write_in_file(file_path, content):
+    try:
+        with open(file_path, 'a') as file:
+            file.write(content)
+            file.flush()  # Ensure the data is written to the file immediately
+    except PermissionError as pe:
+        # If PermissionError occurs, try to create the file in the current working directory
+        current_directory = os.getcwd()
+        file_path = os.path.join(current_directory, file_path)
+
+        with open(file_path, 'a') as file:
+            file.write(content)
+            file.flush()  # Ensure the data is written to the file immediately
+    except FileNotFoundError:
+        # Handle the case where the file doesn't exist
+        with open(file_path, 'w') as file:
+            file.write(content)
+            file.flush()  # Ensure the data is written to the file immediately
+    except Exception as ex:
+        # Handle other exceptions if needed
+        print(f"An error occurred: {ex}")
 # if __name__ == '__main__':
 #     update_namaz_time()

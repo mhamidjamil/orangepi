@@ -1,8 +1,8 @@
 
 
-#$ last work 16/Jan/24 [01:40 AM]
-## version 2.0.1
-## Release Note : NGROK reWork
+#$ last work 18/Jan/24 [03:22 AM]
+## version 2.0.3
+## Release Note : Exception/Ngrok rework
 
 from flask import Flask, render_template, request
 import serial
@@ -10,7 +10,7 @@ import serial.tools.list_ports
 import schedule
 import threading
 import time
-from routes.serial_handler import set_serial_object, read_serial_data, update_time, update_namaz_time, send_ngrok_link
+from routes.serial_handler import set_serial_object, read_serial_data, update_time, update_namaz_time, send_ngrok_link, say_to_serial
 from routes.routes import send_auth
 bg_tasks = True
 ngrok_link_sent = False
@@ -104,7 +104,9 @@ def ngrok_updater():
     
     # Check if send_ngrok_link() has not been called yet
     if not ngrok_link_sent:
-        time.sleep(300)
+        time.sleep(100)
+        say_to_serial("sms sending?")
+        time.sleep(200)
         send_ngrok_link()
         ngrok_link_sent = True
 # def delayed_execution():

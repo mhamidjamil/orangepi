@@ -10,6 +10,11 @@ import subprocess
 import os
 from dotenv import load_dotenv
 import serial
+ngrok_link_sent = False
+
+def is_ngrok_link_sent():
+    global ngrok_link_sent
+    return ngrok_link_sent
 
 load_dotenv()
 ngrok_link = ""
@@ -52,6 +57,8 @@ def send_ngrok_link():
             print(f"Ngrok URL is available: {public_url}")
             send_to_serial_port("sms " + public_url)
             ngrok_link = public_url
+            global ngrok_link_sent
+            ngrok_link_sent = True
             # Perform other tasks with ngrok_url
         else:
             print("Failed to obtain Ngrok URL.")
@@ -164,7 +171,7 @@ def read_serial_data(data):
         print(f"An error occurred in read_serial_data function: {e}")
         write_in_file("exceptions.txt", "\nException in read_serial_data():\n" + str(e) + "\nTime stamp: {"+fetch_current_time_online()+ "}\n")
 
-def fetch_current_time_online():
+def fetch_current_time_online(): #TODO: need to separate this part from py_time
     try:
         response = requests.get('http://worldtimeapi.org/api/timezone/Asia/Karachi')
         data = response.json()
@@ -204,6 +211,9 @@ def update_time():
 def stop_ngrok():
     print("killing ngrok server...")
     subprocess.run(['pkill', '-f', 'ngrok'])
+
+def send_message(message):
+    send_to_serial_port("sms " + message)
 
 def write_in_file(file_path, content):
     try:

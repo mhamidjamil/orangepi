@@ -1,8 +1,8 @@
 
 
-#$ last work 18/Jan/24 [03:22 AM]
-## version 2.0.3
-## Release Note : Exception/Ngrok rework
+#$ last work 25/Jan/24 [01:22 AM]
+## version 2.0.4
+## Release Note : Boot-up msg and ngrok rework
 
 from flask import Flask, render_template, request
 import serial
@@ -10,10 +10,10 @@ import serial.tools.list_ports
 import schedule
 import threading
 import time
-from routes.serial_handler import set_serial_object, read_serial_data, update_time, update_namaz_time, send_ngrok_link, say_to_serial
+from routes.serial_handler import set_serial_object, read_serial_data, update_time, update_namaz_time, send_ngrok_link, say_to_serial, is_ngrok_link_sent, send_message, fetch_current_time_online
 from routes.routes import send_auth
 bg_tasks = True
-ngrok_link_sent = False
+boot_up_message_send = False
 
 app = Flask(__name__)
 
@@ -94,21 +94,23 @@ if bg_tasks:
 
 def update_schedule():
     while True:
-        schedule.run_pending()
-        time.sleep(1)
+        schedule.run_pending() # run background task after specified delay
+        time.sleep(10)
 
-def ngrok_updater():
-    global ngrok_link_sent
-    
+def one_time_task():
+    global boot_up_message_send
     # Delay the execution of send_ngrok_link() by 5 minutes
     
     # Check if send_ngrok_link() has not been called yet
-    if not ngrok_link_sent:
-        time.sleep(100)
-        say_to_serial("sms sending?")
+    if not is_ngrok_link_sent():
+        time.sleep(20)
+        if not boot_up_message_send:
+            send_message("Orange Pi just boot-up time stamp: "+ fetch_current_time_online())
+            boot_up_message_send = True
         time.sleep(200)
+        say_to_serial("sms sending?")
+        time.sleep(500)
         send_ngrok_link()
-        ngrok_link_sent = True
 # def delayed_execution():
 #     # Delay for 5 seconds
 #     time.sleep(20)
@@ -117,7 +119,7 @@ def ngrok_updater():
 
 if __name__ == '__main__':
     thread = threading.Thread(target=update_schedule)
-    thread2 = threading.Thread(target=ngrok_updater)
+    thread2 = threading.Thread(target=one_time_task)
     thread.start()
     thread2.start()
     # timer_thread = threading.Timer(5, delayed_execution)

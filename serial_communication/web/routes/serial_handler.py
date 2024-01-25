@@ -12,9 +12,16 @@ from dotenv import load_dotenv
 import serial
 ngrok_link_sent = False
 
+EXCEPTION_LOGGER_FILE = "exception_logs"
+EXTENSION_TYPE = ".txt"
+
 def is_ngrok_link_sent():
     global ngrok_link_sent
     return ngrok_link_sent
+
+def set_serial_object(serial_object):
+    global ser
+    ser = serial_object
 
 load_dotenv()
 ngrok_link = ""
@@ -34,8 +41,7 @@ def reboot_system():
         send_to_serial_port("sms Rebooting OP system...")
         subprocess.run(command, shell=True, input=f"{password}\n", text=True, check=True)
     except subprocess.CalledProcessError as e:
-        write_in_file("exceptions.txt", "\nException in reboot_system():\n" + str(e) + "\nTime stamp: {"+fetch_current_time_online()+ "}\n")
-        print(f"Error: {e}")
+        exception_logger("reboot_system", e)
 
 def send_ngrok_link():
     try:
@@ -65,64 +71,63 @@ def send_ngrok_link():
             send_to_serial_port("sms Failed to obtain Ngrok URL.")
     except Exception as e:
         print("NGROK not initialized")
-        write_in_file("ngrok_logger.txt", "\nERROR:\n" + str(e) + "\nTime stamp: {"+fetch_current_time_online()+ "}\n")
+        write_in_file("ngrok_logger", "\nERROR:\n" + str(e))
 
 def update_namaz_time():
-    global current_time
-    # Replace this URL with the actual URL of the prayer times for Lahore
-    url = os.getenv("LAHORE_NAMAZ_TIME")
-    
-    # Fetch the HTML content of the webpage
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, 'html.parser')
-
-    # Fetch the current time online
     try:
-        response = requests.get('http://worldtimeapi.org/api/timezone/Asia/Karachi')
-        data = response.json()
-        current_time = datetime.datetime.fromisoformat(data['datetime'])
-        current_time = current_time.strftime("%I:%M %p")
-        # return "10:00 AM"
-    except requests.exceptions.RequestException as e:
-        print(f"An error occurred: {e}")
-        return
-    
-    if not current_time:
-        print("Failed to fetch current time online.")
-        return
-    # else:
-        # print(f"Current time: {current_time}")
+        global current_time
+        # Replace this URL with the actual URL of the prayer times for Lahore
+        url = os.getenv("LAHORE_NAMAZ_TIME")
+        
+        # Fetch the HTML content of the webpage
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'html.parser')
 
-    # Find the prayer time row that corresponds to the next prayer after the current time
-    prayer_times = soup.find_all('td', {'data-label': True})
-    next_prayer = None
+        # Fetch the current time online
+        try:
+            response = requests.get('http://worldtimeapi.org/api/timezone/Asia/Karachi')
+            data = response.json()
+            current_time = datetime.datetime.fromisoformat(data['datetime'])
+            current_time = current_time.strftime("%I:%M %p")
+            # return "10:00 AM"
+        except requests.exceptions.RequestException as e:
+            exception_logger("part_of_update_namaz_time", e)
+            return
+        
+        if not current_time:
+            print("Failed to fetch current time online.")
+            return
+        # else:
+            # print(f"Current time: {current_time}")
 
-    for time in prayer_times:
-        prayer_time = time.text.strip()
-        if datetime.datetime.strptime(prayer_time, '%I:%M %p') > datetime.datetime.strptime(current_time, '%I:%M %p'):
-            next_prayer = time['data-label']
-            break
+        # Find the prayer time row that corresponds to the next prayer after the current time
+        prayer_times = soup.find_all('td', {'data-label': True})
+        next_prayer = None
 
-    # Print and send the next prayer time to the ser terminal
-    if next_prayer:
-        message = f"{next_prayer}: {prayer_time}"
-        print(message)
-        say_to_serial (f"{next_prayer}: {prayer_time}")
-        # Replace the following line with code to send the message to /dev/ttyUSB1
-    else:
-        fajr_element = soup.find('td', {'data-label': 'Fajr'})
-        if fajr_element:
-            fajr_time = fajr_element.text.strip()
-            fajr_time_obj = datetime.datetime.strptime(fajr_time, '%I:%M %p') - datetime.timedelta(minutes=2)
-            print(f"Fajr: {fajr_time_obj.strftime('%I:%M %p')} (?)")
-            say_to_serial("Fajr: "+fajr_time_obj.strftime('%I:%M %p'))
+        for time in prayer_times:
+            prayer_time = time.text.strip()
+            if datetime.datetime.strptime(prayer_time, '%I:%M %p') > datetime.datetime.strptime(current_time, '%I:%M %p'):
+                next_prayer = time['data-label']
+                break
+
+        # Print and send the next prayer time to the ser terminal
+        if next_prayer:
+            message = f"{next_prayer}: {prayer_time}"
+            print(message)
+            say_to_serial (f"{next_prayer}: {prayer_time}")
+            # Replace the following line with code to send the message to /dev/ttyUSB1
         else:
-            print("Failed to find Fajr time.")
-            return None
-
-def set_serial_object(serial_object):
-    global ser
-    ser = serial_object
+            fajr_element = soup.find('td', {'data-label': 'Fajr'})
+            if fajr_element:
+                fajr_time = fajr_element.text.strip()
+                fajr_time_obj = datetime.datetime.strptime(fajr_time, '%I:%M %p') - datetime.timedelta(minutes=2)
+                print(f"Fajr: {fajr_time_obj.strftime('%I:%M %p')} (?)")
+                say_to_serial("Fajr: "+fajr_time_obj.strftime('%I:%M %p'))
+            else:
+                print("Failed to find Fajr time.")
+                return None
+    except Exception as e:
+        exception_logger("update_namaz_time", e)
 
 def read_serial_data(data):
     global logs_receiving, log_data
@@ -168,8 +173,7 @@ def read_serial_data(data):
             else:
                 print(f"unknown keywords in command: {data}")
     except Exception as e:
-        print(f"An error occurred in read_serial_data function: {e}")
-        write_in_file("exceptions.txt", "\nException in read_serial_data():\n" + str(e) + "\nTime stamp: {"+fetch_current_time_online()+ "}\n")
+        exception_logger("read_serial_data", e)
 
 def fetch_current_time_online(): #TODO: need to separate this part from py_time
     try:
@@ -179,8 +183,7 @@ def fetch_current_time_online(): #TODO: need to separate this part from py_time
         formatted_time = current_time.strftime("%y/%m/%d,%H:%M:%S")
         return f"py_time:{formatted_time}+20"
     except requests.exceptions.RequestException as e:
-        print(f"An error occurred: {e}")
-        write_in_file("exceptions.txt", "\nException in fetch_current_time_online():\n" + str(e) + "\nTime stamp: {"+fetch_current_time_online()+ "}\n")
+        exception_logger("fetch_current_time_online", e)
         return None
 
 def say_to_serial(serial_data):
@@ -189,33 +192,43 @@ def say_to_serial(serial_data):
         print(f"sending : {serial_data}")
         send_to_serial_port(serial_data)
     except Exception as e:
-        print(f"An error occurred in say_to_serial function: {e}")
+        exception_logger("say_to_serial", e)
 
 def send_to_serial_port(serial_data):
     # global serial
     try:
         print(f"Sending data to serial port: {serial_data}")
         ser.write(serial_data.encode())
-    except serial.SerialException:
-        print("Serial communication error #172")
-        write_in_file("exceptions.txt", "\nException in send_to_serial_port():\n" + str(e) + "\nTime stamp: {"+fetch_current_time_online()+ "}\n")
+    except serial.SerialException as e:
+        exception_logger("send_to_serial_port", e)
 
 def update_time():
-    current_time = fetch_current_time_online()
-    if current_time:
-        print(f"Current time in Karachi: {current_time}")
-        send_to_serial_port(current_time)
-    else:
-        print("Failed to fetch current time.")
+    try:
+        current_time = fetch_current_time_online()
+        if current_time:
+            print(f"Current time in Karachi: {current_time}")
+            send_to_serial_port(current_time)
+        else:
+            print("Failed to fetch current time.")
+    except Exception as e:
+        exception_logger("update_time", e)
 
 def stop_ngrok():
-    print("killing ngrok server...")
-    subprocess.run(['pkill', '-f', 'ngrok'])
+    try:
+        print("killing ngrok server...")
+        subprocess.run(['pkill', '-f', 'ngrok'])
+    except Exception as e:
+        exception_logger("stop_ngrok", e)
 
 def send_message(message):
-    send_to_serial_port("sms " + message)
+    try:
+        send_to_serial_port("sms " + message)
+    except Exception as e:
+        exception_logger("send_message", e)
 
 def write_in_file(file_path, content):
+    file_path += EXTENSION_TYPE
+    content ="\n\n------------------------------\n"+content+"\n"+"{time: " + fetch_current_time_online()+"}\n--------------------------------\n"
     try:
         with open(file_path, 'a') as file:
             file.write(content)
@@ -236,5 +249,9 @@ def write_in_file(file_path, content):
     except Exception as ex:
         # Handle other exceptions if needed
         print(f"An error occurred: {ex}")
+
+def exception_logger(function_name, error):
+    print(f"Error occurred: {error} \nin {function_name} function")
+    write_in_file(EXCEPTION_LOGGER_FILE, "Exception occur in{"+function_name+"} function.\n Error message: " + str(error))
 # if __name__ == '__main__':
 #     update_namaz_time()

@@ -1,8 +1,8 @@
 
 
-#$ last work 26/Jan/24 [01:27 AM]
-## version 2.0.5
-## Release Note : Internet Connectivity rework
+#$ last work 26/Jan/24 [01:51 AM]
+## version 2.0.6
+## Release Note : Adjust delay according to executer
 
 from flask import Flask, render_template, request
 import serial
@@ -10,7 +10,7 @@ import serial.tools.list_ports
 import schedule
 import threading
 import time
-import subprocess
+import sys
 from routes.serial_handler import set_serial_object, read_serial_data, update_time, update_namaz_time, send_ngrok_link, say_to_serial, is_ngrok_link_sent, send_message, fetch_current_time_online, exception_logger
 from routes.routes import send_auth
 bg_tasks = True
@@ -115,15 +115,23 @@ def one_time_task():
             if not boot_up_message_send:
                 send_message("Orange Pi just boot-up time stamp: "+ fetch_current_time_online())
                 boot_up_message_send = True
-            time.sleep(200)
+            time.sleep(20)
             say_to_serial("sms sending?")
-            time.sleep(500)
+            time.sleep(50)
             send_ngrok_link()
     except Exception as e:
         exception_logger("one_time_task", e)
 
 if __name__ == '__main__':
     try:
+        if len(sys.argv) > 1:
+            # If there are no command-line arguments, assume it's called as a service
+            print("Running as a service")
+            time.sleep(600) # wait for some time until routers power on
+        else:
+            # If there are command-line arguments, assume it's called from the terminal
+            time.sleep(3)
+            print("Running from terminal")
         thread = threading.Thread(target=update_schedule)
         thread2 = threading.Thread(target=one_time_task)
         thread.start()

@@ -1,8 +1,8 @@
 
 
-#$ last work 26/Jan/24 [12:44 AM]
-## version 2.0.4
-## Release Note : Updated exception
+#$ last work 26/Jan/24 [01:27 AM]
+## version 2.0.5
+## Release Note : Internet Connectivity rework
 
 from flask import Flask, render_template, request
 import serial
@@ -122,21 +122,7 @@ def one_time_task():
     except Exception as e:
         exception_logger("one_time_task", e)
 
-def check_internet():
-    while True:
-        try:
-            # Check internet connectivity by pinging Google's public DNS server
-            subprocess.run(['ping', '-c', '1', '8.8.8.8'], check=True)
-            print("Internet is connected.")
-            break
-        except subprocess.CalledProcessError:
-            print("No internet connectivity. Retrying in 5 minutes...")
-            # Sleep for 5 minutes before checking again
-            time.sleep(300)
-
 if __name__ == '__main__':
-    internet_thread = threading.Thread(target=check_internet)
-    internet_thread.start()
     try:
         thread = threading.Thread(target=update_schedule)
         thread2 = threading.Thread(target=one_time_task)

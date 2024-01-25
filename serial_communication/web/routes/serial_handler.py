@@ -250,8 +250,22 @@ def write_in_file(file_path, content):
         # Handle other exceptions if needed
         print(f"An error occurred: {ex}")
 
+def connected_with_internet():
+    while True:
+        try:
+            # Check internet connectivity by pinging Google's public DNS server
+            subprocess.run(['ping', '-c', '1', '8.8.8.8'], check=True)
+            print("Internet is connected.")
+            return True
+        except subprocess.CalledProcessError:
+            print("No internet connectivity. Retrying in 5 minutes...")
+            # Sleep for 5 minutes before checking again
+            time.sleep(300)
+            connected_with_internet()
+
 def exception_logger(function_name, error):
-    print(f"Error occurred: {error} \nin {function_name} function")
-    write_in_file(EXCEPTION_LOGGER_FILE, "Exception occur in{"+function_name+"} function.\n Error message: " + str(error))
+    if connected_with_internet():
+        print(f"\n\t\t-----------------------------------------\nHandled Error:\nError occurred: {error} \nin {function_name} function\n\n")
+        write_in_file(EXCEPTION_LOGGER_FILE, "Exception occur in{"+function_name+"} function.\n Error message: " + str(error))
 # if __name__ == '__main__':
 #     update_namaz_time()

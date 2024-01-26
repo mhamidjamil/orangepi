@@ -6,9 +6,11 @@ import re
 
 ser = None
 
+
 def set_serial_object(serial_object):
     global ser
     ser = serial_object
+
 
 def read_serial(data):
     if "{hay orange-pi!" in data:
@@ -20,7 +22,8 @@ def read_serial(data):
             print(f"sending : {msg}")
             send_to_serial_port(msg)
         elif "untrained_message:" in data:
-            temp_str = re.search(r'untrained_message:(.*?) from', data).group(1).strip()
+            temp_str = re.search(
+                r'untrained_message:(.*?) from', data).group(1).strip()
             sender_number = re.search(r'from : {_([^_]*)_', data).group(1)
             new_message_number = re.search(r'<_(\d+)_>', data).group(1)
 
@@ -28,13 +31,14 @@ def read_serial(data):
             print(f"Extracted sender_number: {sender_number}")
             print(f"Extracted new_message_number: {new_message_number}")
 
-
         else:
             print(f"unknown keywords in command: {data}")
 
+
 def fetch_current_time_online():
     try:
-        response = requests.get('http://worldtimeapi.org/api/timezone/Asia/Karachi')
+        response = requests.get(
+            'http://worldtimeapi.org/api/timezone/Asia/Karachi')
         data = response.json()
         current_time = datetime.datetime.fromisoformat(data['datetime'])
         formatted_time = current_time.strftime("%y/%m/%d,%H:%M:%S")
@@ -43,11 +47,13 @@ def fetch_current_time_online():
         print(f"An error occurred: {e}")
         return None
 
+
 def send_to_serial_port(serial_data):
     try:
         ser.write(serial_data.encode())
     except ser.SerialException as e:
         print(f"An error occurred while sending data to serial port: {e}")
+
 
 def update_time():
     current_time = fetch_current_time_online()

@@ -1,17 +1,23 @@
 
 
-#$ last work 26/Jan/24 [01:51 AM]
+#$ last work 27/Jan/24 [03:00 AM]
 ## version 2.0.6
-## Release Note : Adjust delay according to executer
+## Release Note : Added pylint action
 
+import time
+import sys
+import threading
 from flask import Flask, render_template, request
 import serial
 import serial.tools.list_ports
 import schedule
-import threading
-import time
-import sys
-from routes.serial_handler import set_serial_object, read_serial_data, update_time, update_namaz_time, send_ngrok_link, say_to_serial, is_ngrok_link_sent, send_message, fetch_current_time_online, exception_logger
+from routes.serial_handler import (
+    set_serial_object, read_serial_data, update_time,
+    update_namaz_time, send_ngrok_link, say_to_serial,
+    is_ngrok_link_sent, send_message, fetch_current_time_online,
+    exception_logger
+)
+
 from routes.routes import send_auth
 BG_TASK = True
 BOOT_MESSAGE_SEND = False
@@ -23,7 +29,9 @@ app = Flask(__name__)
 
 
 def get_serial_ports():
-    return [{'port': port.device, 'baud_rate': 115200} for port in serial.tools.list_ports.comports() if port.device.startswith('/dev/tty')]
+    return [{'port': port.device, 'baud_rate': 115200}
+            for port in serial.tools.list_ports.comports()
+                if port.device.startswith('/dev/tty')]
 
 # Function to update the serial port dynamically
 
@@ -128,7 +136,7 @@ def one_time_task():
             if not BOOT_MESSAGE_SEND:
                 send_message("Orange Pi just boot-up time stamp: " +
                              fetch_current_time_online())
-                BOOT_MESSAGE_SEND = True
+                BOOT_MESSAGE_SEND = True # pylint: disable=W0603
             time.sleep(5)
             say_to_serial("sms sending?")
             time.sleep(5)

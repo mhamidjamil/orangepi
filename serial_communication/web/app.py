@@ -13,20 +13,24 @@ import time
 import sys
 from routes.serial_handler import set_serial_object, read_serial_data, update_time, update_namaz_time, send_ngrok_link, say_to_serial, is_ngrok_link_sent, send_message, fetch_current_time_online, exception_logger
 from routes.routes import send_auth
-bg_tasks = True
-boot_up_message_send = False
+BG_TASK = True
+BOOT_MESSAGE_SEND = False
 
 app = Flask(__name__)
 
 # Function to get a list of available serial ports
 # Modify the get_serial_ports function
+
+
 def get_serial_ports():
     return [{'port': port.device, 'baud_rate': 115200} for port in serial.tools.list_ports.comports() if port.device.startswith('/dev/tty')]
 
 # Function to update the serial port dynamically
+
+
 def update_serial_port():
     try:
-        global bg_tasks, ser
+        global BG_TASK, ser
         max_port_number = 5  # Maximum port number to try
         port_pattern = '/dev/ttyACM{}'
         print("Trying to connect to port!")
@@ -38,19 +42,22 @@ def update_serial_port():
                     ser = temp_ser
                     print(f"Connected to {port}")
                     set_serial_object(ser)
-                    bg_tasks = True
+                    BG_TASK = True
                     return temp_ser
                 except serial.SerialException:
                     print(f"Port {port} not available. Trying the next one.")
 
-            print(f"No available ports (tried up to {max_port_number}). Retrying in 10 seconds...")
+            print(
+                f"No available ports (tried up to {max_port_number}). Retrying in 10 seconds...")
             time.sleep(10)
-            update_serial_port() #TODO: this effect execution flow
+            update_serial_port()  # TODO: this effect execution flow
     except Exception as e:
         exception_logger("update_serial_port", e)
 
+
 # Replace with the default serial port
 ser = update_serial_port()
+
 
 @app.route('/')
 def index():
@@ -62,9 +69,10 @@ def index():
 
     return render_template('index.html', default_port=ser, available_ports=available_ports, baud_rates=baud_rates)
 
+
 @app.route('/read_serial')
 def read_serial():
-    global bg_tasks
+    global BG_TASK
     try:
         if ser:
             try:
@@ -77,10 +85,11 @@ def read_serial():
         else:
             return {'error': 'Serial port not accessible'}
     except serial.SerialException as e:
-        bg_tasks = False
+        BG_TASK = False
         update_serial_port()
         exception_logger("read_serial", e)
         return {'error': 'Error reading from serial port'}
+
 
 @app.route('/send_serial', methods=['POST'])
 def send_serial():
@@ -91,52 +100,58 @@ def send_serial():
     except Exception as e:
         exception_logger("send_serial", e)
 
+
 @app.route('/send_auth', methods=['GET'])
 def send_auth_route():
     return send_auth()
 
-if bg_tasks: 
-    schedule.every(2).minutes.do(update_time) 
-    schedule.every(5).minutes.do(update_namaz_time) #TODO: implement array
+
+if BG_TASK:
+    schedule.every(2).minutes.do(update_time)
+    schedule.every(5).minutes.do(update_namaz_time)  # TODO: implement array
+
 
 def update_schedule():
     while True:
-        schedule.run_pending() # run background task after specified delay
+        schedule.run_pending()  # run background task after specified delay
         time.sleep(10)
+
 
 def one_time_task():
     try:
-        global boot_up_message_send
+        global BOOT_MESSAGE_SEND
         # Delay the execution of send_ngrok_link() by 5 minutes
-        
+
         # Check if send_ngrok_link() has not been called yet
         if not is_ngrok_link_sent():
-            time.sleep(20)
-            if not boot_up_message_send:
-                send_message("Orange Pi just boot-up time stamp: "+ fetch_current_time_online())
-                boot_up_message_send = True
-            time.sleep(20)
+            time.sleep(10)
+            if not BOOT_MESSAGE_SEND:
+                send_message("Orange Pi just boot-up time stamp: " +
+                             fetch_current_time_online())
+                BOOT_MESSAGE_SEND = True
+            time.sleep(5)
             say_to_serial("sms sending?")
-            time.sleep(50)
+            time.sleep(5)
             send_ngrok_link()
     except Exception as e:
         exception_logger("one_time_task", e)
+
 
 if __name__ == '__main__':
     try:
         if len(sys.argv) > 1:
             # If there are no command-line arguments, assume it's called as a service
-            print("Running as a service")
-            time.sleep(600) # wait for some time until routers power on
+            print("\n-----------> Running as a service <-----------\n")
+            time.sleep(600)  # wait for some time until routers power on
         else:
             # If there are command-line arguments, assume it's called from the terminal
             time.sleep(3)
-            print("Running from terminal")
+            print("\n-----------> Running from terminal <-----------\n")
         thread = threading.Thread(target=update_schedule)
         thread2 = threading.Thread(target=one_time_task)
         thread.start()
         thread2.start()
-        
+
         # Run the Flask app
         app.run(host='0.0.0.0', port=6677, debug=True)
     except Exception as e:

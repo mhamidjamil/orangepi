@@ -2,13 +2,16 @@ import subprocess
 import requests
 import time
 
+
 def start_ngrok():
     return subprocess.Popen(["ngrok", "http", "192.168.0.122:80"])
+
 
 def get_ngrok_url():
     ngrok_status = requests.get("http://localhost:4040/api/tunnels")
     ngrok_data = ngrok_status.json()
     return ngrok_data['tunnels'][0]['public_url']
+
 
 def main():
     ngrok_process = start_ngrok()
@@ -37,6 +40,7 @@ def main():
             break
         except Exception as e:
             print(f"An error occurred: {e}")
+
 
 if __name__ == "__main__":
     main()

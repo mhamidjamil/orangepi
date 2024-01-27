@@ -256,6 +256,7 @@ def stop_ngrok():
 def send_message(message):
     """Used to send sms to defined number"""
     try:
+        print("Sending message request from orange-pi")
         send_to_serial_port("sms " + message)
     except Exception as e: # pylint: disable=broad-except
         exception_logger("send_message", e)

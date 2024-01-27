@@ -1,2 +1,4 @@
 serial_communication/web/routes/.env
 serial_communication/web/.env
+serial_communication/web/routes/.serial_handler.py.swp
+serial_communication/web/routes/env_tester.py.temp

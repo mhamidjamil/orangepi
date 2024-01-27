@@ -1,14 +1,11 @@
 name: Pylint
 
 on:
-  push:
-    branches:
-      - develop
-      - staging
-      - production
   pull_request:
     branches:
       - main
+      - develop
+      - staging
 
 jobs:
   build:

@@ -103,30 +103,30 @@ def update_namaz_time():
             # return "10:00 AM"
         except requests.exceptions.RequestException as e:
             exception_logger("part_of_update_namaz_time", e)
-            return
+            return None
 
         if not current_time:
             print("Failed to fetch current time online.")
-            return
+            return None
 
         # Find the prayer time row that corresponds to the next prayer after the current time
         prayer_times = soup.find_all('td', {'data-label': True})
-        next_prayer = None
+        next_prayer_name = None #refer to prayer name
+        next_prayer_time = None
 
         for prayer_time in prayer_times:
             prayer_time = prayer_time.text.strip()
             if (datetime.datetime.strptime(prayer_time, '%I:%M %p') >
                     datetime.datetime.strptime(current_time, '%I:%M %p')):
 
-                next_prayer = prayer_time['data-label']
+                next_prayer_name = prayer_time['data-label']
+                next_prayer_time = prayer_time
                 break
 
         # Print and send the next prayer time to the SERIAL_PORT terminal
-        if next_prayer:
-            message = f"{next_prayer}: {prayer_time}"
-            print(message)
-            say_to_serial(f"{next_prayer}: {prayer_time}")
-            # Replace the following line with code to send the message to /dev/ttyUSB1
+        if next_prayer_name:
+            print(f"{next_prayer_name}: {next_prayer_time}")
+            say_to_serial(f"{next_prayer_name}: {next_prayer_time}")
         else:
             fajr_element = soup.find('td', {'data-label': 'Fajr'})
             if fajr_element:
@@ -140,13 +140,13 @@ def update_namaz_time():
         return None
     except Exception as e: # pylint: disable=broad-except
         exception_logger("update_namaz_time", e)
+        return None
 
 
 def read_serial_data(data):
     """read TTGO-Tcall serial data"""
     global LOGS_RECEIVING, LOG_DATA # pylint: disable=global-statement
     try:
-        global CURRENT_NGROK_LINK
         if "{hay orange-pi!" in data or LOGS_RECEIVING:
             if "[#SaveIt]:" in data or LOGS_RECEIVING:
                 LOGS_RECEIVING = True
@@ -264,8 +264,8 @@ def send_message(message):
 def write_in_file(file_path, content):
     """Will write data in file"""
     file_path += EXTENSION_TYPE
-    content = "\n\n------------------------------\n"+content+"\n" + \
-        "{time: " + fetch_current_time_online()+"}\n--------------------------------\n"
+    content = "\n\n------------------------------>\n" + content + "\n" + \
+        "{time: " + fetch_current_time_online() + "}\n<--------------------------------\n"
     try:
         with open(file_path, 'a', encoding='utf-8') as file:
             file.write(content)
@@ -307,7 +307,7 @@ def exception_logger(function_name, error):
     """Work as a logger (additional logging with function name)"""
     if connected_with_internet():
         print(
-            f"\n\t\t-----------------------------------------\n"
+            f"\n\t\t----------------------------------------->\n"
             f"Handled Error:\nError occurred: {error}"
             f" \nin {function_name} function\n\n")
 

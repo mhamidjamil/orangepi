@@ -1,7 +1,7 @@
 """Api and routes handler"""
 import random
 from flask import jsonify, request
-from serial_handler import send_to_serial_port
+from .serial_handler import send_to_serial_port #pylint: disable=relative-beyond-top-level
 
 
 def send_to_serial_from_routes(serial_data):

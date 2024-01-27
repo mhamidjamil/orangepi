@@ -1,4 +1,5 @@
 """Main script read project documentation for information"""
+# pylint: disable=import-error, no-name-in-module
 import time
 import sys
 import multiprocessing
@@ -10,8 +11,7 @@ import schedule
 from routes.serial_handler import (
     set_serial_object, read_serial_data, update_time,
     update_namaz_time, send_ngrok_link, say_to_serial,
-    is_ngrok_link_sent, send_message, fetch_current_time_online,
-    exception_logger
+    is_ngrok_link_sent, send_message, exception_logger
 )
 from routes.routes import send_auth
 
@@ -113,7 +113,7 @@ def one_time_task():
         if not is_ngrok_link_sent():
             time.sleep(10)
             if not BOOT_MESSAGE_SEND:
-                send_message("Orange Pi just boot-up time stamp: " + fetch_current_time_online())
+                send_message("Script just started.")
                 BOOT_MESSAGE_SEND = True
             time.sleep(5)
             say_to_serial("sms sending?")
@@ -126,20 +126,22 @@ if __name__ == '__main__':
     try:
 
         if len(sys.argv) > 1:
+            # If there are no command-line arguments, assume it's called as a service
             print("\n-----------> Running as a service <-----------\n")
             time.sleep(600)
         else:
+            # If there are command-line arguments, assume it's called from the terminal
             time.sleep(3)
             print("\n-----------> Running from terminal <-----------\n")
 
         current_process_id = multiprocessing.current_process().pid
         print(f"!!----------> Process ID: {current_process_id} - Executing my_function")
 
-        app.run(host='0.0.0.0', port=6677)
         thread = threading.Thread(target=update_schedule)
         thread2 = threading.Thread(target=one_time_task)
         thread.start()
         thread2.start()
+        app.run(host='0.0.0.0', port=6677, debug=False) #don't move above thread work
 
     except Exception as m: # pylint: disable=broad-except
         print(f"Exception in main: {m}")

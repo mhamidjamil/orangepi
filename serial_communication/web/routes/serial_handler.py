@@ -13,7 +13,7 @@ import serial
 import requests
 
 load_dotenv()
-CURRENT_NGROK_LINK = ""
+CURRENT_NGROK_LINK = None
 LOGS_RECEIVING = False
 LOG_DATA = ""
 SERIAL_PORT = None
@@ -21,8 +21,9 @@ NGROK_LINK_SENT = False
 EXCEPTION_LOGGER_FILE = "exception_logs"
 EXTENSION_TYPE = ".txt"
 DEFAULT_PORT = 8069
-SECONDRY_NUMBER_FOR_NGROK=os.getenv("_SECONDRY_NUMBER_FOR_NGROK_")
-SEND_MESSAGE_TO_SECONDRY_NUMBER=os.getenv("_SEND_MESSAGE_TO_SECONDRY_NUMBER_")
+SECONDRY_NUMBER_FOR_NGROK = os.getenv("_SECONDRY_NUMBER_FOR_NGROK_")
+SEND_MESSAGE_TO_SECONDRY_NUMBER = os.getenv("_SEND_MESSAGE_TO_SECONDRY_NUMBER_")
+MESSAGE_SEND_TO_CUSTOM_NUMBER = False
 
 
 def is_ngrok_link_sent():
@@ -56,30 +57,38 @@ def send_ngrok_link(target_port=None):
     """Will send NGROK link via message"""
     try:
         global CURRENT_NGROK_LINK, NGROK_LINK_SENT # pylint: disable=global-statement
-        stop_ngrok()
-        time.sleep(2)
-        ngrok.set_auth_token(os.getenv("NGROK_TOKEN"))
+        if CURRENT_NGROK_LINK is None or target_port is not None:
+            #if function is called first time or with custom targer_port number
+            stop_ngrok()
+            time.sleep(2)
+            ngrok.set_auth_token(os.getenv("NGROK_TOKEN"))
 
-        # Open a Ngrok tunnel to your local development server
-        ngrok_port = target_port if target_port is not None else DEFAULT_PORT
-        tunnel = ngrok.connect(ngrok_port)
+            # Open a Ngrok tunnel to your local development server
+            ngrok_port = target_port if target_port is not None else DEFAULT_PORT
+            tunnel = ngrok.connect(ngrok_port)
 
-        # Extract the public URL from the NgrokTunnel object
-        public_url = tunnel.public_url
-
-        # Print the Ngrok URL
-        print("Ngrok URL:", public_url)
-
-        if public_url:
-            print(f"Ngrok URL is available: {public_url}")
-            send_message(public_url)
+            # Extract the public URL from the NgrokTunnel object
+            public_url = tunnel.public_url
             CURRENT_NGROK_LINK = public_url
+
+            # Print the Ngrok URL
+            print("Ngrok URL:", public_url)
+        else:
+            time.sleep(3)
+
+        if CURRENT_NGROK_LINK:
+            print(f"Ngrok URL is available: {CURRENT_NGROK_LINK}")
+            time.sleep(5)
+            send_message(CURRENT_NGROK_LINK)
             NGROK_LINK_SENT = True
             def send_to_secondary():
-                if SEND_MESSAGE_TO_SECONDRY_NUMBER:
+                global MESSAGE_SEND_TO_CUSTOM_NUMBER # pylint: disable=global-statement
+                if SEND_MESSAGE_TO_SECONDRY_NUMBER is True and not MESSAGE_SEND_TO_CUSTOM_NUMBER:
                     time.sleep(10)
-                    print("Sending ngrok link to secondary number")
-                    send_custom_message(public_url, SECONDRY_NUMBER_FOR_NGROK)
+                    print("Sending ngrok link to secondary number"
+                        f"\t ? allowed: {SEND_MESSAGE_TO_SECONDRY_NUMBER}")
+                    send_custom_message(CURRENT_NGROK_LINK, SECONDRY_NUMBER_FOR_NGROK)
+                    MESSAGE_SEND_TO_CUSTOM_NUMBER = True
 
             # Start a new thread to send the message to the secondary number
             thread = threading.Thread(target=send_to_secondary)
@@ -188,20 +197,7 @@ def read_serial_data(data):
                 print(f"Extracted message: {temp_str}")
                 print(f"Extracted sender_number: {sender_number}")
                 print(f"Extracted new_message_number: {new_message_number}")
-                if "restart op" in temp_str:
-                    print(
-                        f"Asking TTGO to delete the message "
-                        f"{new_message_number} and rebooting the system...")
-                    send_to_serial_port("delete " + new_message_number)
-                    time.sleep(3)
-                    reboot_system()
-                elif "send ngrok link" in temp_str:
-                    print(
-                        f"Asking TTGO to delete the message "
-                        f"{new_message_number} and sending ngrok link...")
-                    send_to_serial_port("delete " + new_message_number)
-                    print(f"ngrok link: {CURRENT_NGROK_LINK}")
-                    send_ngrok_link()
+                process_untrained_message(temp_str, new_message_number)
             elif "send bypass key" in data:
                 say_to_serial("bypass key: " + os.getenv("BYPASS_KEY"))
             else:
@@ -209,6 +205,45 @@ def read_serial_data(data):
     except Exception as e: # pylint: disable=broad-except
         exception_logger("read_serial_data", e)
 
+def process_untrained_message(temp_str, new_message_number):
+    """Untrained messages will be executed and deleted from stack"""
+    try:
+        if "restart op" in temp_str:
+            print(
+                f"Asking TTGO to delete the message "
+                f"{new_message_number} and rebooting the system...")
+            send_to_serial_port("delete " + new_message_number)
+            time.sleep(3)
+            reboot_system()
+        elif "send ngrok link" in temp_str:
+            print(
+                f"Asking TTGO to delete the message "
+                f"{new_message_number} and sending ngrok link...")
+            send_to_serial_port("delete " + new_message_number)
+            time.sleep(2)
+            send_ngrok_link()
+            print(f"ngrok link: {CURRENT_NGROK_LINK}")
+        elif "send new ngrok link" in temp_str:
+            print(
+                f"Asking TTGO to delete the message "
+                f"{new_message_number} and sending ngrok link...")
+            send_to_serial_port("delete " + new_message_number)
+            time.sleep(2)
+            send_ngrok_link(DEFAULT_PORT)
+            print(f"ngrok link: {CURRENT_NGROK_LINK}")
+        elif "ngrok on" in temp_str:
+            match = re.search(r'ngrok on (\d+)', temp_str)
+            custom_port_number = int(match.group(1))
+            print(
+                f"Asking TTGO to delete the message "
+                f"{new_message_number} and sending ngrok link"
+                f" for port {custom_port_number}...")
+            send_to_serial_port("delete " + new_message_number)
+            time.sleep(3)
+            send_ngrok_link(custom_port_number)
+            print(f"ngrok link: {CURRENT_NGROK_LINK}")
+    except Exception as e: # pylint: disable=broad-except
+        exception_logger("process_untrained_message", e)
 
 def fetch_current_time_online():
     # TODO: need to separate this part from py_time # pylint: disable=fixme
@@ -261,7 +296,7 @@ def update_time():
 def stop_ngrok():
     """Need to kill NGROK if it is already running"""
     try:
-        print("killing ngrok server...")
+        print("killing ngrok server (if running)...")
         subprocess.run(['pkill', '-f', 'ngrok'], check=False)
     except Exception as e: # pylint: disable=broad-except
         exception_logger("stop_ngrok", e)

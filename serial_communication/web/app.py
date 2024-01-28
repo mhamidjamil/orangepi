@@ -18,6 +18,7 @@ from routes.routes import send_auth
 
 BG_TASK = True
 BOOT_MESSAGE_SEND = False
+TESTING_ENVIRONMENT = False
 
 app = Flask(__name__)
 
@@ -99,7 +100,7 @@ def send_auth_route():
 
 if BG_TASK:
     schedule.every(2).minutes.do(update_time)
-    schedule.every(1).minutes.do(update_namaz_time)
+    schedule.every(5).minutes.do(update_namaz_time)
 
 def update_schedule():
     """Update the schedule."""
@@ -113,20 +114,21 @@ def one_time_task():
         global BOOT_MESSAGE_SEND # pylint: disable=global-statement
         if not is_ngrok_link_sent():
             time.sleep(10)
-            if not BOOT_MESSAGE_SEND:
-                send_message("Script just started boot code: " +
-                    str(random.randint(10000, 99999)))
-                BOOT_MESSAGE_SEND = True
-            time.sleep(5)
+            if not TESTING_ENVIRONMENT:
+                if not BOOT_MESSAGE_SEND:
+                    send_message("Script just started boot code: " +
+                        str(random.randint(10000, 99999)))
+                    BOOT_MESSAGE_SEND = True
+                time.sleep(5)
             say_to_serial("sms sending?")
-            time.sleep(5)
+            time.sleep(10)
             send_ngrok_link()
     except Exception as ott: # pylint: disable=broad-except
         exception_logger("one_time_task", ott)
 
 if __name__ == '__main__':
     try:
-
+        # lsof -i :6677 #to know which process is using this port
         if len(sys.argv) > 1:
             # If there are no command-line arguments, assume it's called as a service
             print("\n-----------> Running as a service <-----------\n")
@@ -135,6 +137,7 @@ if __name__ == '__main__':
             # If there are command-line arguments, assume it's called from the terminal
             time.sleep(3)
             print("\n-----------> Running from terminal <-----------\n")
+            TESTING_ENVIRONMENT = True
 
         current_process_id = multiprocessing.current_process().pid
         print(f"!!----------> Process ID: {current_process_id} - Executing my_function")

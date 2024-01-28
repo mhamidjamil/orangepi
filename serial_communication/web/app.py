@@ -2,6 +2,7 @@
 # pylint: disable=import-error, no-name-in-module
 import time
 import sys
+import random
 import multiprocessing
 import threading
 from flask import Flask, render_template, request
@@ -98,7 +99,7 @@ def send_auth_route():
 
 if BG_TASK:
     schedule.every(2).minutes.do(update_time)
-    schedule.every(5).minutes.do(update_namaz_time)
+    schedule.every(1).minutes.do(update_namaz_time)
 
 def update_schedule():
     """Update the schedule."""
@@ -113,7 +114,8 @@ def one_time_task():
         if not is_ngrok_link_sent():
             time.sleep(10)
             if not BOOT_MESSAGE_SEND:
-                send_message("Script just started.")
+                send_message("Script just started boot code: " +
+                    str(random.randint(10000, 99999)))
                 BOOT_MESSAGE_SEND = True
             time.sleep(5)
             say_to_serial("sms sending?")

@@ -4,6 +4,7 @@ import datetime
 import re
 import time
 import subprocess
+import threading
 import os
 from bs4 import BeautifulSoup
 from pyngrok import ngrok
@@ -20,7 +21,8 @@ NGROK_LINK_SENT = False
 EXCEPTION_LOGGER_FILE = "exception_logs"
 EXTENSION_TYPE = ".txt"
 DEFAULT_PORT = 8069
-
+SECONDRY_NUMBER_FOR_NGROK=os.getenv("_SECONDRY_NUMBER_FOR_NGROK_")
+SEND_MESSAGE_TO_SECONDRY_NUMBER=os.getenv("_SEND_MESSAGE_TO_SECONDRY_NUMBER_")
 
 
 def is_ngrok_link_sent():
@@ -70,9 +72,22 @@ def send_ngrok_link(target_port=None):
 
         if public_url:
             print(f"Ngrok URL is available: {public_url}")
-            send_to_serial_port("sms " + public_url)
+            send_message(public_url)
             CURRENT_NGROK_LINK = public_url
             NGROK_LINK_SENT = True
+            def send_to_secondary():
+                if SEND_MESSAGE_TO_SECONDRY_NUMBER:
+                    time.sleep(10)
+                    print("Sending ngrok link to secondary number")
+                    send_custom_message(public_url, SECONDRY_NUMBER_FOR_NGROK)
+
+            # Start a new thread to send the message to the secondary number
+            thread = threading.Thread(target=send_to_secondary)
+            thread.start()
+
+            # Wait for the thread to finish before proceeding with the main thread
+            thread.join()
+
             # Perform other tasks with ngrok_url
         else:
             print("Failed to obtain Ngrok URL.")
@@ -115,12 +130,11 @@ def update_namaz_time():
         next_prayer_time = None
 
         for prayer_time in prayer_times:
-            prayer_time = prayer_time.text.strip()
-            if (datetime.datetime.strptime(prayer_time, '%I:%M %p') >
+            next_prayer_time = prayer_time.text.strip()
+            if (datetime.datetime.strptime(next_prayer_time, '%I:%M %p') >
                     datetime.datetime.strptime(current_time, '%I:%M %p')):
 
                 next_prayer_name = prayer_time['data-label']
-                next_prayer_time = prayer_time
                 break
 
         # Print and send the next prayer time to the SERIAL_PORT terminal
@@ -248,10 +262,18 @@ def stop_ngrok():
     """Need to kill NGROK if it is already running"""
     try:
         print("killing ngrok server...")
-        subprocess.run(['pkill', '-f', 'ngrok'], check=True)
+        subprocess.run(['pkill', '-f', 'ngrok'], check=False)
     except Exception as e: # pylint: disable=broad-except
         exception_logger("stop_ngrok", e)
 
+
+def send_custom_message(message, number):
+    """Used to send message to custom number"""
+    try:
+        print("Sending custom message request from orange-pi!")
+        send_to_serial_port("smsTo [" + message + "]{" + number + "}")
+    except Exception as e: # pylint: disable=broad-except
+        exception_logger("send_message", e)
 
 def send_message(message):
     """Used to send sms to defined number"""

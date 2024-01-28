@@ -1,0 +1,15 @@
+import re
+
+# Your string
+temp_str = "please run ngrok on 8069 Ahmed23"
+
+# Extract port number using regular expression
+match = re.search(r'ngrok on (\d+)', temp_str)
+print("match data: ")
+print(match)
+# Check if the match is found
+if match:
+    custom_port_number = int(match.group(1))
+    print(f"Custom port number: {custom_port_number}")
+else:
+    print("Port number not found in the string.")

@@ -178,8 +178,7 @@ def read_serial_data(data):
                 if "end_of_file" in data:
                     LOGS_RECEIVING = False
                     print("logs received saving them")
-                    write_in_file("logs.txt", "\nLogs:\n" + LOG_DATA +
-                                  "\nTime stamp: {"+fetch_current_time_online() + "}\n")
+                    write_in_file("logs.txt", LOG_DATA)
                     LOG_DATA = ""
             elif "send time" in data or "update time" in data or "send updated time" in data:
                 update_time()

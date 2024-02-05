@@ -15,6 +15,7 @@ from routes.serial_handler import (
     is_ngrok_link_sent, send_message, exception_logger
 )
 from routes.routes import send_auth
+from routes.uptime_checker import is_uptime_greater_than_threshold
 
 BG_TASK = True
 BOOT_MESSAGE_SEND = False
@@ -129,10 +130,16 @@ def one_time_task():
 if __name__ == '__main__':
     try:
         # lsof -i :6677 #to know which process is using this port
+        script_rebooted = is_uptime_greater_than_threshold(10)
+        print(f"State of system uptime {script_rebooted}")
         if len(sys.argv) > 1:
             # If there are no command-line arguments, assume it's called as a service
             print("\n-----------> Running as a service <-----------\n")
-            time.sleep(600)
+            if not script_rebooted:
+                print("\n\tHave to wait untill system Stabilize")
+                time.sleep(600)
+            else:
+                print("\n\tSkipping delay as system is stable")
         else:
             # If there are command-line arguments, assume it's called from the terminal
             time.sleep(3)

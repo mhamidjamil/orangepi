@@ -11,3 +11,4 @@ serial_communication/web/ngrok_logger.txt
 serial_communication/web/exception_logs.txt
 serial_communication/web/logs.txt.txt
 serial_communication/web/routes/__pycache__/uptime_checker.cpython-310.pyc
+

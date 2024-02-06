@@ -99,6 +99,31 @@ def send_auth_route():
     """Send authentication."""
     return send_auth()
 
+@app.route('/inspect', methods=['GET'])
+def inspect():
+    """Inspect the server."""
+    try:
+        # Get the 'number' query parameter from the request
+        number_param = request.args.get('number', '')
+
+        # Convert the string to an integer
+        number = int(number_param)
+
+        # Calculate the sum of digits
+        digit_sum = sum(int(digit) for digit in str(abs(number)))
+
+        response_data = {
+            'status': 'success',
+            'message': f'Sum of digits: {digit_sum}'
+        }
+        return response_data
+    except ValueError as e:
+        response_data = {
+            'status': 'error',
+            'message': f'Invalid number parameter: {e}'
+        }
+        return response_data
+
 if BG_TASK:
     schedule.every(2).minutes.do(update_time)
     schedule.every(5).minutes.do(update_namaz_time)
@@ -122,7 +147,7 @@ def one_time_task():
                     BOOT_MESSAGE_SEND = True
                 time.sleep(5)
             say_to_serial("sms sending?")
-            time.sleep(10)
+            time.sleep(15)
             send_ngrok_link()
     except Exception as ott: # pylint: disable=broad-except
         exception_logger("one_time_task", ott)

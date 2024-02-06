@@ -207,7 +207,7 @@ def read_serial_data(data):
 def process_untrained_message(temp_str, new_message_number):
     """Untrained messages will be executed and deleted from stack"""
     try:
-        if "restart op" in temp_str:
+        if "restart op" in temp_str or "restart" in temp_str:
             print(
                 f"Asking TTGO to delete the message "
                 f"{new_message_number} and rebooting the system...")

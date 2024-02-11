@@ -14,9 +14,9 @@ from routes.serial_handler import (
     update_namaz_time, send_ngrok_link, say_to_serial,
     is_ngrok_link_sent, send_message, exception_logger
 )
-from routes.routes import send_auth
+from routes.route import send_auth
 from routes.uptime_checker import is_uptime_greater_than_threshold
-from routes.ntfy import send_notification
+from routes.communication.ntfy import send_notification
 
 BG_TASK = True
 BOOT_MESSAGE_SEND = False

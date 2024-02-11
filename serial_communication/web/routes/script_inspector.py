@@ -5,7 +5,8 @@ import subprocess
 import os
 from dotenv import load_dotenv
 import requests
-from serial_handler import exception_logger, fetch_current_time_online
+from datetime import datetime
+from serial_handler import exception_logger
 load_dotenv()
 
 def check_flask_service():
@@ -57,6 +58,8 @@ if __name__ == "__main__":
     while True:
         print("\n\n\t loop restarted\n\n")
         check_flask_service() # you can add more inspectore here
-        print(f"Last run on: {fetch_current_time_online}")
+        current_time = datetime.now()
+        formatted_time = current_time.strftime("%H:%M:%S")
+        print(f"Last run on: {formatted_time}")
         print("\n\n\t After inspection\n\n")
         time.sleep(30)  # Wait for 10 minutes before checking again

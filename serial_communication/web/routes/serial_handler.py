@@ -11,7 +11,9 @@ from pyngrok import ngrok
 from dotenv import load_dotenv
 import serial
 import requests
-from .ntfy import send_notification, send_alert #pylint: disable=relative-beyond-top-level
+import logging
+from .communication.ntfy import send_notification, send_alert #pylint: disable=relative-beyond-top-level
+logging.basicConfig(filename='logger.txt', level=logging.INFO)
 
 load_dotenv()
 CURRENT_NGROK_LINK = None
@@ -330,22 +332,12 @@ def write_in_file(file_path, content):
         with open(file_path, 'a', encoding='utf-8') as file:
             file.write(content)
             file.flush()  # Ensure the data is written to the file immediately
-    except PermissionError:
-        # If PermissionError occurs, try to create the file in the current working directory
-        current_directory = os.getcwd()
-        file_path = os.path.join(current_directory, file_path)
-
-        with open(file_path, 'a', encoding='utf-8') as file:
-            file.write(content)
-            file.flush()  # Ensure the data is written to the file immediately
-    except FileNotFoundError:
-        # Handle the case where the file doesn't exist
-        with open(file_path, 'a', encoding='utf-8') as file:
-            file.write(content)
-            file.flush()  # Ensure the data is written to the file immediately
+        return True
     except Exception as ex: # pylint: disable=broad-except
         # Handle other exceptions if needed
         print(f"An error occurred: {ex}")
+        logging.warning(ex)
+        return False
 
 
 def connected_with_internet():
@@ -367,11 +359,9 @@ def exception_logger(function_name, error):
     """Work as a logger (additional logging with function name)"""
     if connected_with_internet():
         send_alert(f"something bad happend in: {function_name} function")
-        print(
-            f"\n\t\t----------------------------------------->\n"
-            f"Handled Error:\nError occurred: {error}"
-            f" \nin {function_name} function\n\n")
+        msg = "Exception occur in {" + function_name + "} function.\n Error message: " + str(error)
+        print(msg)
 
-        write_in_file(EXCEPTION_LOGGER_FILE,
-                      "Exception occur in{" + function_name + "}"
-                      " function.\n Error message: " + str(error))
+        if not write_in_file(EXCEPTION_LOGGER_FILE, msg):
+            logging.error(msg)
+            print("Issue in file writing")

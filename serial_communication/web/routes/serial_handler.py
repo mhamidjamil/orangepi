@@ -11,6 +11,7 @@ from pyngrok import ngrok
 from dotenv import load_dotenv
 import serial
 import requests
+from .ntfy import send_notification, send_alert #pylint: disable=relative-beyond-top-level
 
 load_dotenv()
 CURRENT_NGROK_LINK = None
@@ -80,6 +81,7 @@ def send_ngrok_link(target_port=None):
             print(f"Ngrok URL is available: {CURRENT_NGROK_LINK}")
             time.sleep(5)
             send_message(CURRENT_NGROK_LINK)
+            send_notification(f"ngrok link: {CURRENT_NGROK_LINK}")
             NGROK_LINK_SENT = True
             def send_to_secondary():
                 global MESSAGE_SEND_TO_CUSTOM_NUMBER # pylint: disable=global-statement
@@ -207,6 +209,7 @@ def read_serial_data(data):
 def process_untrained_message(temp_str, new_message_number):
     """Untrained messages will be executed and deleted from stack"""
     try:
+        send_notification(f"untrained message recieved from {new_message_number} working on it.")
         if "restart op" in temp_str or "restart" in temp_str:
             print(
                 f"Asking TTGO to delete the message "
@@ -363,6 +366,7 @@ def connected_with_internet():
 def exception_logger(function_name, error):
     """Work as a logger (additional logging with function name)"""
     if connected_with_internet():
+        send_alert(f"something bad happend in: {function_name} function")
         print(
             f"\n\t\t----------------------------------------->\n"
             f"Handled Error:\nError occurred: {error}"

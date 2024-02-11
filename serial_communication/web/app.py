@@ -16,6 +16,7 @@ from routes.serial_handler import (
 )
 from routes.routes import send_auth
 from routes.uptime_checker import is_uptime_greater_than_threshold
+from routes.ntfy import send_notification
 
 BG_TASK = True
 BOOT_MESSAGE_SEND = False
@@ -70,18 +71,23 @@ def index():
 @app.route('/read_serial')
 def read_serial():
     """Read serial data."""
-    global BG_TASK # pylint: disable=global-statement
+    global BG_TASK  # pylint: disable=global-statement
     try:
         if ser:
-            data = ser.readline().decode('utf-8')
+            raw_data = ser.readline()
+            data = raw_data.decode('utf-8')
             read_serial_data(data)
-            return {'data': data.strip()}  # Strip whitespace from the data
+            return {'data': data.strip()} # Strip whitespace from the data
         return {'error': 'Serial port not accessible'}
+    except UnicodeDecodeError as ud:
+        exception_logger("read_serial UnicodeDecodeError", ud)
+        print(f"Problematic data: {raw_data}")
+        return {'result': 'error', 'message': 'UnicodeDecodeError', 'data': raw_data}
     except serial.SerialException as rs:
         BG_TASK = False
         update_serial_port()
-        exception_logger("read_serial", rs)
-        return {'error': 'Error reading from serial port'}
+        exception_logger("read_serial SerialException", rs)
+        return {'result': 'error', 'message': 'Error reading from serial port'}
 
 @app.route('/send_serial', methods=['POST'])
 def send_serial():
@@ -155,13 +161,15 @@ def one_time_task():
 if __name__ == '__main__':
     try:
         # lsof -i :6677 #to know which process is using this port
+        send_notification("script started")
         script_rebooted = is_uptime_greater_than_threshold(10)
         print(f"State of system uptime {script_rebooted}")
         if len(sys.argv) > 1:
             # If there are no command-line arguments, assume it's called as a service
             print("\n-----------> Running as a service <-----------\n")
             if not script_rebooted:
-                print("\n\tHave to wait untill system Stabilize")
+                print("\n\tHave to wait untill system stabilize")
+                send_notification("have to wait untill system stabilize")
                 time.sleep(600)
             else:
                 print("\n\tSkipping delay as system is stable")
@@ -176,6 +184,7 @@ if __name__ == '__main__':
 
         thread = threading.Thread(target=update_schedule)
         thread2 = threading.Thread(target=one_time_task)
+        send_notification("app started")
         thread.start()
         thread2.start()
         app.run(host='0.0.0.0', port=6677, debug=False) #don't move above thread work

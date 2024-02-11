@@ -5,7 +5,7 @@ import subprocess
 import os
 from dotenv import load_dotenv
 import requests
-from serial_handler import exception_logger
+from serial_handler import exception_logger, fetch_current_time_online
 load_dotenv()
 
 def check_flask_service():
@@ -29,7 +29,7 @@ def check_flask_service():
     except Exception as e: # pylint: disable=broad-except
         print(f"An error occurred: {e}")
         restart_flask_service()
-        time.sleep(10) # try to restart script so wait for it then save the logs
+        time.sleep(15) # try to restart script so wait for it then save the logs
         exception_logger("script_inspector: check_flask_service", e)
 
 def restart_flask_service():
@@ -53,9 +53,10 @@ def restart_flask_service():
         print(f"Error restarting {service_name}: {e}")
 
 if __name__ == "__main__":
-    time.sleep(650)
+    # time.sleep(650) # need this delay as app.py will start after 10 minutes
     while True:
         print("\n\n\t loop restarted\n\n")
         check_flask_service() # you can add more inspectore here
+        print(f"Last run on: {fetch_current_time_online}")
         print("\n\n\t After inspection\n\n")
-        time.sleep(600)  # Wait for 10 minutes before checking again
+        time.sleep(30)  # Wait for 10 minutes before checking again

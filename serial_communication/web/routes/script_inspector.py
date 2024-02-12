@@ -3,11 +3,15 @@ import time
 import random
 import subprocess
 import os
+from datetime import datetime
 from dotenv import load_dotenv
 import requests
-from datetime import datetime
 from serial_handler import exception_logger
+from .communication.ntfy import send_notification, send_alert, send_log #pylint: disable=relative-beyond-top-level
 load_dotenv()
+
+CHECK_AFTER = 30 #in seconds
+START_AFTER = 650 #in seconds
 
 def check_flask_service():
     """If our flask service is not orking as expected then it will restart that service"""
@@ -25,10 +29,12 @@ def check_flask_service():
             print(data['message'])
         else:
             print(f"Unexpected response: {response.text}")
+            send_notification("Flask app is not working trying to restart it")
             exception_logger("script_inspector: check_flask_service", response.text)
             restart_flask_service()
     except Exception as e: # pylint: disable=broad-except
         print(f"An error occurred: {e}")
+        send_alert("Any thing bad happend trying to restart flask app")
         restart_flask_service()
         time.sleep(15) # try to restart script so wait for it then save the logs
         exception_logger("script_inspector: check_flask_service", e)
@@ -50,16 +56,20 @@ def restart_flask_service():
         command = ['sudo', '-S', 'systemctl', 'restart', service_name]
         subprocess.run(command, input=f"{password}\n", text=True, check=True)
         print(f"{service_name} restarted successfully.")
+        send_notification("Flask app restarted")
     except subprocess.CalledProcessError as e:
         print(f"Error restarting {service_name}: {e}")
+        send_alert("Flask app is not restarted as expected")
 
 if __name__ == "__main__":
-    # time.sleep(650) # need this delay as app.py will start after 10 minutes
+    # time.sleep(START_AFTER) # need this delay as app.py will start after 10 minutes
     while True:
         print("\n\n\t loop restarted\n\n")
+        send_log("script inspector started")
         check_flask_service() # you can add more inspectore here
         current_time = datetime.now()
         formatted_time = current_time.strftime("%H:%M:%S")
         print(f"Last run on: {formatted_time}")
+        send_log(f"script inspector ended, sleeping for {CHECK_AFTER}")
         print("\n\n\t After inspection\n\n")
-        time.sleep(30)  # Wait for 10 minutes before checking again
+        time.sleep(CHECK_AFTER)

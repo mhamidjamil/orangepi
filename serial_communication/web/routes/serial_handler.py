@@ -11,9 +11,9 @@ from pyngrok import ngrok
 from dotenv import load_dotenv
 import serial
 import requests
-import logging
+# import logging
 from .communication.ntfy import send_notification, send_alert #pylint: disable=relative-beyond-top-level
-logging.basicConfig(filename='logger.txt', level=logging.INFO)
+# logging.basicConfig(filename='py_logger.txt', level=logging.INFO)
 
 load_dotenv()
 CURRENT_NGROK_LINK = None
@@ -324,6 +324,7 @@ def send_message(message):
 
 
 def write_in_file(file_path, content):
+    # return False
     """Will write data in file"""
     file_path += EXTENSION_TYPE
     content = "\n\n------------------------------>\n" + content + "\n" + \
@@ -336,7 +337,7 @@ def write_in_file(file_path, content):
     except Exception as ex: # pylint: disable=broad-except
         # Handle other exceptions if needed
         print(f"An error occurred: {ex}")
-        logging.warning(ex)
+        # logging.warning(ex)
         return False
 
 
@@ -363,5 +364,5 @@ def exception_logger(function_name, error):
         print(msg)
 
         if not write_in_file(EXCEPTION_LOGGER_FILE, msg):
-            logging.error(msg)
+            # logging.error(msg)
             print("Issue in file writing")

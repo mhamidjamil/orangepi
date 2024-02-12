@@ -5,6 +5,7 @@ import sys
 import random
 import multiprocessing
 import threading
+from datetime import datetime
 from flask import Flask, render_template, request
 import serial
 import serial.tools.list_ports
@@ -161,7 +162,10 @@ def one_time_task():
 if __name__ == '__main__':
     try:
         # lsof -i :6677 #to know which process is using this port
-        send_notification("script started")
+        current_time = datetime.now()
+        formatted_time = current_time.strftime("%H:%M:%S")
+        print(f"Main script last run time: {formatted_time}")
+        send_notification(f"Main script started at: {formatted_time}")
         script_rebooted = is_uptime_greater_than_threshold(10)
         print(f"State of system uptime {script_rebooted}")
         if len(sys.argv) > 1:

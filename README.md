@@ -1,4 +1,6 @@
-# orangePi
+# Orange Pi with ESP32 TTGO TCall
+
+![Workflow Status](https://github.com/mhamidjamil/orangePi/workflows/Pylint/badge.svg)
 
 In this repository, Python scripts are employed to automate a myriad of tasks, facilitating seamless communication with various interconnected projects. The codebase serves as a robust foundation for orchestrating and streamlining operations, promoting efficiency and coordination across multiple facets of the project ecosystem.
 
@@ -61,3 +63,6 @@ New feature added to this project offers a streamlined solution for fetching upc
 **Usage:**
 
 To unlock the full potential of the 2FA feature, it is recommended to combine the functionalities of both the OrangePi and TTGO TCall projects.
+
+Note:
+Read me file might be out dated as I add almost 2 to 3 new features per week so do check closed issues to know which new feature is added.

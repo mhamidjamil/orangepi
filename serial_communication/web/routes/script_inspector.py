@@ -62,7 +62,7 @@ def restart_flask_service():
         send_alert("Flask app is not restarted as expected")
 
 if __name__ == "__main__":
-    # time.sleep(START_AFTER) # need this delay as app.py will start after 10 minutes
+    time.sleep(START_AFTER) # need this delay as app.py will start after 10 minutes
     while True:
         print("\n\n\t loop restarted\n\n")
         send_log("script inspector started")

@@ -336,7 +336,6 @@ def write_in_file(file_name, content):
     except Exception as ex: # pylint: disable=broad-except
         # Handle other exceptions if needed
         print(f"An error occurred: {ex}")
-        # logging.warning(ex)
         return False
 
 

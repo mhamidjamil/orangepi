@@ -11,6 +11,7 @@ from pyngrok import ngrok
 from dotenv import load_dotenv
 import serial
 import requests
+from .communication.ntfy import send_warning, send_error, send_info #pylint: disable=relative-beyond-top-level
 
 load_dotenv()
 CURRENT_NGROK_LINK = None
@@ -18,7 +19,7 @@ LOGS_RECEIVING = False
 LOG_DATA = ""
 SERIAL_PORT = None
 NGROK_LINK_SENT = False
-EXCEPTION_LOGGER_FILE = "exception_logs"
+EXCEPTION_LOGGER_FILE_NAME = "exception_logs"
 EXTENSION_TYPE = ".txt"
 DEFAULT_PORT = 8069
 SECONDRY_NUMBER_FOR_NGROK = os.getenv("_SECONDRY_NUMBER_FOR_NGROK_")
@@ -80,6 +81,7 @@ def send_ngrok_link(target_port=None):
             print(f"Ngrok URL is available: {CURRENT_NGROK_LINK}")
             time.sleep(5)
             send_message(CURRENT_NGROK_LINK)
+            send_warning(f"ngrok link: {CURRENT_NGROK_LINK}")
             NGROK_LINK_SENT = True
             def send_to_secondary():
                 global MESSAGE_SEND_TO_CUSTOM_NUMBER # pylint: disable=global-statement
@@ -207,7 +209,8 @@ def read_serial_data(data):
 def process_untrained_message(temp_str, new_message_number):
     """Untrained messages will be executed and deleted from stack"""
     try:
-        if "restart op" in temp_str:
+        send_warning(f"untrained message recieved from {new_message_number} working on it.")
+        if "restart op" in temp_str or "restart" in temp_str:
             print(
                 f"Asking TTGO to delete the message "
                 f"{new_message_number} and rebooting the system...")
@@ -309,6 +312,7 @@ def send_custom_message(message, number):
     except Exception as e: # pylint: disable=broad-except
         exception_logger("send_message", e)
 
+
 def send_message(message):
     """Used to send sms to defined number"""
     try:
@@ -318,31 +322,21 @@ def send_message(message):
         exception_logger("send_message", e)
 
 
-def write_in_file(file_path, content):
+def write_in_file(file_name, content):
+    # return False
     """Will write data in file"""
-    file_path += EXTENSION_TYPE
+    file_name = os.path.join(os.environ['LOG_FILE_PATH'], file_name + EXTENSION_TYPE)
     content = "\n\n------------------------------>\n" + content + "\n" + \
         "{time: " + fetch_current_time_online() + "}\n<--------------------------------\n"
     try:
-        with open(file_path, 'a', encoding='utf-8') as file:
+        with open(file_name, 'a', encoding='utf-8') as file:
             file.write(content)
             file.flush()  # Ensure the data is written to the file immediately
-    except PermissionError:
-        # If PermissionError occurs, try to create the file in the current working directory
-        current_directory = os.getcwd()
-        file_path = os.path.join(current_directory, file_path)
-
-        with open(file_path, 'a', encoding='utf-8') as file:
-            file.write(content)
-            file.flush()  # Ensure the data is written to the file immediately
-    except FileNotFoundError:
-        # Handle the case where the file doesn't exist
-        with open(file_path, 'a', encoding='utf-8') as file:
-            file.write(content)
-            file.flush()  # Ensure the data is written to the file immediately
+        return True
     except Exception as ex: # pylint: disable=broad-except
         # Handle other exceptions if needed
         print(f"An error occurred: {ex}")
+        return False
 
 
 def connected_with_internet():
@@ -363,11 +357,15 @@ def connected_with_internet():
 def exception_logger(function_name, error):
     """Work as a logger (additional logging with function name)"""
     if connected_with_internet():
-        print(
-            f"\n\t\t----------------------------------------->\n"
-            f"Handled Error:\nError occurred: {error}"
-            f" \nin {function_name} function\n\n")
+        send_error(f"Something bad happened in: {function_name} function")
+        send_info(f"Error in {function_name}"
+                 f"Error message: {error} at: {fetch_current_time_online()}")
+        msg = f"\n------------>\n Exception occur in {function_name} function." + \
+                "\n Error message: " + str(error) + "\n<--------------\n"
+        print(msg)
 
-        write_in_file(EXCEPTION_LOGGER_FILE,
-                      "Exception occur in{" + function_name + "}"
-                      " function.\n Error message: " + str(error))
+        if not write_in_file(EXCEPTION_LOGGER_FILE_NAME, msg):
+            send_error(f"Unable to write error of {function_name} in logs")
+            print("Issue in file writing")
+    else:
+        send_error("Not connected with internet!")

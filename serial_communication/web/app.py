@@ -5,6 +5,7 @@ import sys
 import random
 import multiprocessing
 import threading
+from datetime import datetime
 from flask import Flask, render_template, request
 import serial
 import serial.tools.list_ports
@@ -14,8 +15,9 @@ from routes.serial_handler import (
     update_namaz_time, send_ngrok_link, say_to_serial,
     is_ngrok_link_sent, send_message, exception_logger
 )
-from routes.routes import send_auth
+from routes.route import send_auth
 from routes.uptime_checker import is_uptime_greater_than_threshold
+from routes.communication.ntfy import send_warning
 
 BG_TASK = True
 BOOT_MESSAGE_SEND = False
@@ -70,18 +72,23 @@ def index():
 @app.route('/read_serial')
 def read_serial():
     """Read serial data."""
-    global BG_TASK # pylint: disable=global-statement
+    global BG_TASK  # pylint: disable=global-statement
     try:
         if ser:
-            data = ser.readline().decode('utf-8')
+            raw_data = ser.readline()
+            data = raw_data.decode('utf-8')
             read_serial_data(data)
-            return {'data': data.strip()}  # Strip whitespace from the data
+            return {'data': data.strip()} # Strip whitespace from the data
         return {'error': 'Serial port not accessible'}
+    except UnicodeDecodeError as ud:
+        exception_logger("read_serial UnicodeDecodeError", ud)
+        print(f"Problematic data: {raw_data}")
+        return {'result': 'error', 'message': 'UnicodeDecodeError', 'data': raw_data}
     except serial.SerialException as rs:
         BG_TASK = False
         update_serial_port()
-        exception_logger("read_serial", rs)
-        return {'error': 'Error reading from serial port'}
+        exception_logger("read_serial SerialException", rs)
+        return {'result': 'error', 'message': 'Error reading from serial port'}
 
 @app.route('/send_serial', methods=['POST'])
 def send_serial():
@@ -98,6 +105,31 @@ def send_serial():
 def send_auth_route():
     """Send authentication."""
     return send_auth()
+
+@app.route('/inspect', methods=['GET'])
+def inspect():
+    """Inspect the server."""
+    try:
+        # Get the 'number' query parameter from the request
+        number_param = request.args.get('number', '')
+
+        # Convert the string to an integer
+        number = int(number_param)
+
+        # Calculate the sum of digits
+        digit_sum = sum(int(digit) for digit in str(abs(number)))
+
+        response_data = {
+            'status': 'success',
+            'message': f'Sum of digits: {digit_sum}'
+        }
+        return response_data
+    except ValueError as e:
+        response_data = {
+            'status': 'error',
+            'message': f'Invalid number parameter: {e}'
+        }
+        return response_data
 
 if BG_TASK:
     schedule.every(2).minutes.do(update_time)
@@ -122,7 +154,7 @@ def one_time_task():
                     BOOT_MESSAGE_SEND = True
                 time.sleep(5)
             say_to_serial("sms sending?")
-            time.sleep(10)
+            time.sleep(15)
             send_ngrok_link()
     except Exception as ott: # pylint: disable=broad-except
         exception_logger("one_time_task", ott)
@@ -130,13 +162,18 @@ def one_time_task():
 if __name__ == '__main__':
     try:
         # lsof -i :6677 #to know which process is using this port
+        current_time = datetime.now()
+        formatted_time = current_time.strftime("%H:%M:%S")
+        print(f"Main script last run time: {formatted_time}")
+        send_warning(f"Main script started at: {formatted_time}")
         script_rebooted = is_uptime_greater_than_threshold(10)
         print(f"State of system uptime {script_rebooted}")
         if len(sys.argv) > 1:
             # If there are no command-line arguments, assume it's called as a service
             print("\n-----------> Running as a service <-----------\n")
             if not script_rebooted:
-                print("\n\tHave to wait untill system Stabilize")
+                print("\n\tHave to wait untill system stabilize")
+                send_warning("have to wait untill system stabilize")
                 time.sleep(600)
             else:
                 print("\n\tSkipping delay as system is stable")
@@ -151,6 +188,7 @@ if __name__ == '__main__':
 
         thread = threading.Thread(target=update_schedule)
         thread2 = threading.Thread(target=one_time_task)
+        send_warning("app started")
         thread.start()
         thread2.start()
         app.run(host='0.0.0.0', port=6677, debug=False) #don't move above thread work

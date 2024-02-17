@@ -1,4 +1,4 @@
-"""This script will be used to send notification to andriod"""
+"""This script will be used to send notification to android"""
 import subprocess
 import sys
 import logging

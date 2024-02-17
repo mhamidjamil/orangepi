@@ -17,7 +17,7 @@ from routes.serial_handler import (
 )
 from routes.route import send_auth
 from routes.uptime_checker import is_uptime_greater_than_threshold
-from routes.communication.ntfy import send_warning
+from routes.communication.ntfy import send_warning, send_info
 
 BG_TASK = True
 BOOT_MESSAGE_SEND = False
@@ -165,15 +165,16 @@ if __name__ == '__main__':
         current_time = datetime.now()
         formatted_time = current_time.strftime("%H:%M:%S")
         print(f"Main script last run time: {formatted_time}")
-        send_warning(f"Main script started at: {formatted_time}")
         script_rebooted = is_uptime_greater_than_threshold(10)
-        print(f"State of system uptime {script_rebooted}")
+        send_info(f"Main script started at: {formatted_time} and "
+                 f"{'run manually' if script_rebooted else 'run by srvice'}")
+
         if len(sys.argv) > 1:
             # If there are no command-line arguments, assume it's called as a service
             print("\n-----------> Running as a service <-----------\n")
             if not script_rebooted:
-                print("\n\tHave to wait untill system stabilize")
-                send_warning("have to wait untill system stabilize")
+                print("\n\tHave to wait until system stabilize")
+                send_warning("have to wait until system stabilize")
                 time.sleep(600)
             else:
                 print("\n\tSkipping delay as system is stable")

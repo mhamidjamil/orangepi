@@ -34,7 +34,7 @@ def check_flask_service():
             restart_flask_service()
     except Exception as e: # pylint: disable=broad-except
         print(f"An error occurred: {e}")
-        send_error("Any thing bad happend trying to restart flask app")
+        send_error("Any thing bad happened trying to restart flask app")
         restart_flask_service()
         time.sleep(15) # try to restart script so wait for it then save the logs
         exception_logger("script_inspector: check_flask_service", e)

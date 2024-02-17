@@ -11,7 +11,6 @@ from pyngrok import ngrok
 from dotenv import load_dotenv
 import serial
 import requests
-# import logging
 from .communication.ntfy import send_warning, send_error, send_info #pylint: disable=relative-beyond-top-level
 
 load_dotenv()

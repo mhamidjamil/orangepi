@@ -13,7 +13,8 @@ import schedule
 from routes.serial_handler import (
     set_serial_object, read_serial_data, update_time,
     update_namaz_time, send_ngrok_link, say_to_serial,
-    is_ngrok_link_sent, send_message, exception_logger
+    is_ngrok_link_sent, send_message, exception_logger,
+    sync_company_numbers
 )
 from routes.route import send_auth
 from routes.uptime_checker import is_uptime_greater_than_threshold
@@ -134,6 +135,7 @@ def inspect():
 if BG_TASK:
     schedule.every(2).minutes.do(update_time)
     schedule.every(5).minutes.do(update_namaz_time)
+    schedule.every(30).minutes.do(sync_company_numbers)
 
 def update_schedule():
     """Update the schedule."""
@@ -166,7 +168,7 @@ if __name__ == '__main__':
         formatted_time = current_time.strftime("%H:%M:%S")
         print(f"Main script last run time: {formatted_time}")
         script_rebooted = is_uptime_greater_than_threshold(10)
-        send_info(f"Main script started at: {formatted_time} and "
+        send_info(f"\n\nMain script started at: {formatted_time} and "
                  f"{'run manually' if script_rebooted else 'run by srvice'}")
 
         if len(sys.argv) > 1:

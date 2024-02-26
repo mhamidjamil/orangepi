@@ -12,19 +12,21 @@ load_dotenv(DOTENV_PATH)
 file = os.getenv("DEFAULT_LOGGER")
 logging.basicConfig(filename=file, level=logging.INFO)
 
-NTFY_URL = "192.168.1.238:9999"
+NTFY_URL = os.getenv("_NTFY_URL_")
 
 def send_to_android(endpoint, message):
     """Function to send data to Android using specified endpoint"""
     message = message.replace(' ', '_')
-    command = f"curl -d {message} {NTFY_URL}/{endpoint}"
-
-    try:
-        result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
-        print("Command output:", result.stdout)
-    except subprocess.CalledProcessError as e:
-        print("Error executing command:", e)
-        print("Command output (stderr):", e.stderr)
+    if NTFY_URL is None:
+        print("Make sure you env file is on Write location.")
+    else:
+        command = f"curl -d {message} {NTFY_URL}/{endpoint}"
+        try:
+            result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
+            print("Command output:", result.stdout)
+        except subprocess.CalledProcessError as e:
+            print("Error executing command:", e)
+            print("Command output (stderr):", e.stderr)
 
 
 def send_info(message):

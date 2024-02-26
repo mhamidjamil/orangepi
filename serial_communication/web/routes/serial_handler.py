@@ -22,8 +22,8 @@ NGROK_LINK_SENT = False
 EXCEPTION_LOGGER_FILE_NAME = "exception_logs"
 EXTENSION_TYPE = ".txt"
 DEFAULT_PORT = 8069
-SECONDRY_NUMBER_FOR_NGROK = os.getenv("_SECONDRY_NUMBER_FOR_NGROK_")
-SEND_MESSAGE_TO_SECONDRY_NUMBER = os.getenv("_SEND_MESSAGE_TO_SECONDRY_NUMBER_")
+SECONDARY_NUMBER_FOR_NGROK = os.getenv("_SECONDARY_NUMBER_FOR_NGROK_")
+SEND_MESSAGE_TO_SECONDARY_NUMBER = os.getenv("_SEND_MESSAGE_TO_SECONDARY_NUMBER_")
 MESSAGE_SEND_TO_CUSTOM_NUMBER = False
 
 
@@ -81,15 +81,15 @@ def send_ngrok_link(target_port=None):
             print(f"Ngrok URL is available: {CURRENT_NGROK_LINK}")
             time.sleep(5)
             send_message(CURRENT_NGROK_LINK)
-            send_warning(f"ngrok link: {CURRENT_NGROK_LINK}")
+            send_info(f"ngrok link: {CURRENT_NGROK_LINK}")
             NGROK_LINK_SENT = True
             def send_to_secondary():
                 global MESSAGE_SEND_TO_CUSTOM_NUMBER # pylint: disable=global-statement
-                if SEND_MESSAGE_TO_SECONDRY_NUMBER is True and not MESSAGE_SEND_TO_CUSTOM_NUMBER:
+                if SEND_MESSAGE_TO_SECONDARY_NUMBER is True and not MESSAGE_SEND_TO_CUSTOM_NUMBER:
                     time.sleep(10)
                     print("Sending ngrok link to secondary number"
-                        f"\t ? allowed: {SEND_MESSAGE_TO_SECONDRY_NUMBER}")
-                    send_custom_message(CURRENT_NGROK_LINK, SECONDRY_NUMBER_FOR_NGROK)
+                        f"\t ? allowed: {SEND_MESSAGE_TO_SECONDARY_NUMBER}")
+                    send_custom_message(CURRENT_NGROK_LINK, SECONDARY_NUMBER_FOR_NGROK)
                     MESSAGE_SEND_TO_CUSTOM_NUMBER = True
 
             # Start a new thread to send the message to the secondary number
@@ -209,7 +209,7 @@ def read_serial_data(data):
 def process_untrained_message(temp_str, new_message_number):
     """Untrained messages will be executed and deleted from stack"""
     try:
-        send_warning(f"untrained message recieved from {new_message_number} working on it.")
+        send_warning(f"untrained message received from {new_message_number} working on it.")
         if "restart op" in temp_str or "restart" in temp_str:
             print(
                 f"Asking TTGO to delete the message "
@@ -357,8 +357,7 @@ def connected_with_internet():
 def exception_logger(function_name, error):
     """Work as a logger (additional logging with function name)"""
     if connected_with_internet():
-        send_error(f"Something bad happened in: {function_name} function")
-        send_info(f"Error in {function_name}"
+        send_error(f"Error in {function_name}"
                  f"Error message: {error} at: {fetch_current_time_online()}")
         msg = f"\n------------>\n Exception occur in {function_name} function." + \
                 "\n Error message: " + str(error) + "\n<--------------\n"

@@ -19,6 +19,7 @@ from routes.serial_handler import (
 from routes.route import send_auth
 from routes.uptime_checker import is_uptime_greater_than_threshold
 from routes.communication.ntfy import send_warning, send_info
+from routes.watcher import initialize_port, flash, beep
 
 BG_TASK = True
 BOOT_MESSAGE_SEND = False
@@ -32,21 +33,19 @@ def get_serial_ports():
             for port in serial.tools.list_ports.comports()
             if port.device.startswith('/dev/tty')]
 
-def update_serial_port():
+def update_serial_port(device):
     """Update the serial port dynamically."""
     try:
-        global BG_TASK, ser # pylint: disable=global-statement
+        global BG_TASK # pylint: disable=global-statement
         max_port_number = 5  # Maximum port number to try
-        port_pattern = '/dev/ttyACM{}'
+        port_pattern = f'{device}{{}}'
         print("Trying to connect to port!")
         while True:
             for port_number in range(max_port_number):
                 port = port_pattern.format(port_number)
                 try:
                     temp_ser = serial.Serial(port, baudrate=115200, timeout=1)
-                    ser = temp_ser
                     print(f"Connected to {port}")
-                    set_serial_object(ser)
                     BG_TASK = True
                     return temp_ser
                 except serial.SerialException:
@@ -54,13 +53,15 @@ def update_serial_port():
 
             print(f"No available ports (tried up to {max_port_number}). Retrying in 10 seconds...")
             time.sleep(10)
-            update_serial_port()
+            update_serial_port("/dev/ttyACM")
     except Exception as usp_e: # pylint: disable=broad-except
         exception_logger("update_serial_port", usp_e)
         return None
 
 # Replace with the default serial port
-ser = update_serial_port()
+ser = update_serial_port("/dev/ttyACM")
+set_serial_object(ser)
+# ser = serial.Serial('/dev/ttyUSB0', 115200)
 
 @app.route('/')
 def index():
@@ -87,7 +88,7 @@ def read_serial():
         return {'result': 'error', 'message': 'UnicodeDecodeError', 'data': raw_data}
     except serial.SerialException as rs:
         BG_TASK = False
-        update_serial_port()
+        update_serial_port("/dev/ttyACM")
         exception_logger("read_serial SerialException", rs)
         return {'result': 'error', 'message': 'Error reading from serial port'}
 
@@ -165,11 +166,14 @@ if __name__ == '__main__':
     try:
         # lsof -i :6677 #to know which process is using this port
         current_time = datetime.now()
+        initialize_port()
+        flash()
+        beep()
         formatted_time = current_time.strftime("%H:%M:%S")
         print(f"Main script last run time: {formatted_time}")
         script_rebooted = is_uptime_greater_than_threshold(10)
         send_info(f"\n\nMain script started at: {formatted_time} and "
-                 f"{'run manually' if script_rebooted else 'run by srvice'}")
+                 f"{'run manually' if script_rebooted else 'run by service'}")
 
         if len(sys.argv) > 1:
             # If there are no command-line arguments, assume it's called as a service

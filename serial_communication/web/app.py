@@ -19,11 +19,12 @@ from routes.serial_handler import (
 from routes.route import send_auth
 from routes.uptime_checker import is_uptime_greater_than_threshold
 from routes.communication.ntfy import send_warning, send_info
-from routes.watcher import initialize_port, flash, beep
+from routes.watcher import initialize_port, flash, beep, update_serial_port
 
 BG_TASK = True
 BOOT_MESSAGE_SEND = False
 TESTING_ENVIRONMENT = False
+TTGO_TCALL_PORT = "/dev/ttyACM"
 
 app = Flask(__name__)
 
@@ -33,33 +34,8 @@ def get_serial_ports():
             for port in serial.tools.list_ports.comports()
             if port.device.startswith('/dev/tty')]
 
-def update_serial_port(device):
-    """Update the serial port dynamically."""
-    try:
-        global BG_TASK # pylint: disable=global-statement
-        max_port_number = 5  # Maximum port number to try
-        port_pattern = f'{device}{{}}'
-        print("Trying to connect to port!")
-        while True:
-            for port_number in range(max_port_number):
-                port = port_pattern.format(port_number)
-                try:
-                    temp_ser = serial.Serial(port, baudrate=115200, timeout=1)
-                    print(f"Connected to {port}")
-                    BG_TASK = True
-                    return temp_ser
-                except serial.SerialException:
-                    print(f"Port {port} not available. Trying the next one.")
-
-            print(f"No available ports (tried up to {max_port_number}). Retrying in 10 seconds...")
-            time.sleep(10)
-            update_serial_port("/dev/ttyACM")
-    except Exception as usp_e: # pylint: disable=broad-except
-        exception_logger("update_serial_port", usp_e)
-        return None
-
 # Replace with the default serial port
-ser = update_serial_port("/dev/ttyACM")
+ser = update_serial_port(TTGO_TCALL_PORT)
 set_serial_object(ser)
 # ser = serial.Serial('/dev/ttyUSB0', 115200)
 
@@ -88,7 +64,8 @@ def read_serial():
         return {'result': 'error', 'message': 'UnicodeDecodeError', 'data': raw_data}
     except serial.SerialException as rs:
         BG_TASK = False
-        update_serial_port("/dev/ttyACM")
+        update_serial_port(TTGO_TCALL_PORT)
+        BG_TASK = True
         exception_logger("read_serial SerialException", rs)
         return {'result': 'error', 'message': 'Error reading from serial port'}
 

@@ -3,7 +3,7 @@
 import time
 import serial
 import serial.tools.list_ports
-from communication.ntfy import send_warning, send_error, send_info #pylint: disable=relative-beyond-top-level
+from .communication.ntfy import send_warning, send_error, send_info #pylint: disable=relative-beyond-top-level
 
 SERIAL_PORT = None
 
@@ -24,14 +24,14 @@ def update_serial_port(device):
                 try:
                     temp_ser = serial.Serial(port, baudrate=115200, timeout=1)
                     print(f"Connected to {port}")
-                    send_info("Watcher port initialized")
+                    send_info(device + " port initialized")
                     return temp_ser
                 except serial.SerialException:
                     print(f"Port {port} not available. Trying the next one.")
 
             print(f"No available ports (tried up to {max_port_number}). Retrying in 10 seconds...")
             time.sleep(10)
-            send_warning("watcher port not initialized retry in 10 seconds")
+            send_warning(device + " port not initialized retry in 10 seconds")
             update_serial_port("/dev/ttyUSB")
     except Exception as usp_e: # pylint: disable=broad-except
         send_error("Some thing bad happened in: update_serial_port: error: " + usp_e)
@@ -76,12 +76,13 @@ def buzzer_off():
 def beep():
     """to beep"""
     buzzer_on()
-    time.sleep(3)
+    time.sleep(2)
     buzzer_off()
 
 # def beep(number_of_beeps, beep_for):
 if __name__ == '__main__':
     initialize_port()
     time.sleep(5)
-    # flash()
+    flash()
+    time.sleep(5)
     beep()

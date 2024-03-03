@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 # Specify the path to your .env file
 DOTENV_PATH = '/home/orangepi/Desktop/projects/orangePi/serial_communication/web/.env'
 load_dotenv(DOTENV_PATH)
+SAVE_LOGS = True
 
 file = os.getenv("DEFAULT_LOGGER")
 logging.basicConfig(filename=file, level=logging.INFO)
@@ -16,11 +17,14 @@ NTFY_URL = os.getenv("_NTFY_URL_")
 
 def send_to_android(endpoint, message):
     """Function to send data to Android using specified endpoint"""
+    if not SAVE_LOGS:
+        return
     message = message.replace(' ', '_')
     if NTFY_URL is None:
         print("Make sure you env file is on Write location.")
     else:
         command = f"curl -d {message} {NTFY_URL}/{endpoint}"
+        # curl -d testing 192.168.1.239:9999/warnings
         try:
             result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
             print("Command output:", result.stdout)
@@ -42,10 +46,12 @@ def send_warning(message):
 def send_error(message):
     """to send errors"""
     send_to_android("errors", message)
-    log_message("error", message)
+    log_message("error", "\n" + message + "\n")
 
 def log_message(level, msg):
     """Log a message with the specified log level."""
+    if not SAVE_LOGS:
+        return
     if level == 'info':
         logging.info(msg)
     elif level == 'warning':

@@ -21,7 +21,8 @@ SERIAL_PORT = None
 NGROK_LINK_SENT = False
 EXCEPTION_LOGGER_FILE_NAME = "exception_logs"
 EXTENSION_TYPE = ".txt"
-DEFAULT_PORT = 8069
+DEFAULT_PORT = os.getenv("_DEFAULT_PORT_")
+
 SECONDARY_NUMBER_FOR_NGROK = os.getenv("_SECONDARY_NUMBER_FOR_NGROK_")
 SEND_MESSAGE_TO_SECONDARY_NUMBER = os.getenv("_SEND_MESSAGE_TO_SECONDARY_NUMBER_")
 MESSAGE_SEND_TO_CUSTOM_NUMBER = False
@@ -264,7 +265,8 @@ def fetch_current_time_online():
 
 
 def say_to_serial(serial_data):
-    """Used to communicate with TTGO-TCall via defined string"""
+    """This will convert the incoming string to the proper message so 
+    ttgo can understand that orange pi is communicating with it"""
     try:
         serial_data = "{hay ttgo-tcall!"+serial_data+"}"
         print(f"sending : {serial_data}")
@@ -274,7 +276,7 @@ def say_to_serial(serial_data):
 
 
 def send_to_serial_port(serial_data):
-    """Will send string to TTGO-TCall"""
+    """Will send string as it is to TTGO-TCall"""
     try:
         print(f"Sending data to serial port: {serial_data}")
         SERIAL_PORT.write(serial_data.encode())
@@ -368,3 +370,7 @@ def exception_logger(function_name, error):
             print("Issue in file writing")
     else:
         send_error("Not connected with internet!")
+
+def sync_company_numbers():
+    """This function will sync company numbers from ttgo module with local file"""
+    # this part ill be completed after watcher will sync with SECO

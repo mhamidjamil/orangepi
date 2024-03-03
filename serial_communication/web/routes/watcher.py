@@ -60,7 +60,7 @@ def led_off():
 def flash():
     """to flash led"""
     led_on()
-    # time.sleep(5)
+    time.sleep(5)
     led_off()
 
 # Buzzer related functionality =>
@@ -76,7 +76,7 @@ def buzzer_off():
 def beep():
     """to beep"""
     buzzer_on()
-    # time.sleep(2)
+    time.sleep(2)
     buzzer_off()
 
 # def beep(number_of_beeps, beep_for):

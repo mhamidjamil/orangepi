@@ -11,6 +11,7 @@
         class="auto-scroll">
         <!-- Display serial data here -->
     </div>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 </head>
 
 <body>
@@ -26,8 +27,10 @@
 
         <label for="port-select">Select Serial Port:</label>
         <select id="port-select" name="serialPort">
-            {% for port in available_ports %}
-            <option value="{{ port }}" {% if port==default_port %}selected{% endif %}>{{ port }}</option>
+            {% for port_info in available_ports %}
+            <option value="{{ port_info['port'] }}" {% if port_info['port']==default_port['port'] %}selected{% endif %}>
+                {{ port_info['port'] }}
+            </option>
             {% endfor %}
         </select>
 
@@ -48,7 +51,7 @@
     <script>
         // JavaScript for fetching and displaying serial data
         function fetchSerialData() {
-            fetch('/read_serial')
+            fetch(`/read_serial?_=${new Date().getTime()}`)
                 .then(response => response.json())
                 .then(data => {
                     // Append the new data to the existing content with different color for received data
@@ -97,6 +100,28 @@
         // JavaScript for clearing serial data
         document.getElementById('clear-button').addEventListener('click', function () {
             document.getElementById('serial-data').innerText = ''; // Clear serial data
+        });
+
+        document.getElementById('port-select').addEventListener('change', function (event) {
+            var selectedPort = event.target.value;
+            console.log("Selected Port:", selectedPort);
+
+            // Send an AJAX request to update the port on the server
+            fetch('/update_port', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ port: selectedPort })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Updated port successfully:", data);
+                    // You can update the UI or provide feedback to the user here
+                })
+                .catch(error => {
+                    console.error('Error updating port:', error);
+                });
         });
     </script>
 </body>

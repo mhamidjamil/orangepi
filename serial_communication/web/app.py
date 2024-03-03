@@ -6,7 +6,7 @@ import random
 import multiprocessing
 import threading
 from datetime import datetime
-from flask import Flask, render_template, request
+from flask import jsonify, Flask, render_template, request
 import serial
 import serial.tools.list_ports
 import schedule
@@ -25,6 +25,7 @@ BG_TASK = True
 BOOT_MESSAGE_SEND = False
 TESTING_ENVIRONMENT = False
 TTGO_TCALL_PORT = "/dev/ttyACM"
+COMMUNICATION_PORT = None
 
 app = Flask(__name__)
 
@@ -37,15 +38,44 @@ def get_serial_ports():
 # Replace with the default serial port
 ser = update_serial_port(TTGO_TCALL_PORT)
 set_serial_object(ser)
+if COMMUNICATION_PORT is None:
+    COMMUNICATION_PORT = ser
 # ser = serial.Serial('/dev/ttyUSB0', 115200)
 
 @app.route('/')
 def index():
     """Render the index page."""
     available_ports = get_serial_ports()
-    baud_rates = [9600, 115200, 230400, 460800, 921600]
+
+    if COMMUNICATION_PORT:
+        print(f"\n\n\t\t sending to default index.html: {COMMUNICATION_PORT}")
+        return render_template('index.html',
+                               default_port=COMMUNICATION_PORT,
+                               available_ports=available_ports)
+    print("\n\n\t\t !!!___Sending default to index.html___!!!")
     return render_template('index.html',
-                default_port=ser, available_ports=available_ports, baud_rates=baud_rates)
+                            default_port=ser,
+                            available_ports=available_ports)
+
+@app.route('/update_port', methods=['POST'])
+def update_port():
+    """To update port dynamically from the web page"""
+    try:
+        selected_port = request.get_json().get('port')
+        if selected_port is not None:
+            print("Trying to change to: " + selected_port)
+            global ser, COMMUNICATION_PORT # pylint: disable=global-statement
+            ser = serial.Serial(selected_port, 115200)
+            COMMUNICATION_PORT = ser
+            print("\n\n\t\t### Port updated successfully ###")
+            return jsonify({'status': 'success', 'message': 'Port updated successfully'})
+
+        print("No port provided in the request.")
+        return jsonify({'status': 'error', 'message': 'No port provided'})
+    except Exception as e: # pylint: disable=broad-except
+        print("Error updating port:", e)
+        return jsonify({'status': 'error', 'message': 'Error updating port'})
+
 
 @app.route('/read_serial')
 def read_serial():
@@ -133,9 +163,9 @@ def one_time_task():
                         str(random.randint(10000, 99999)))
                     BOOT_MESSAGE_SEND = True
                 time.sleep(5)
-            say_to_serial("sms sending?")
-            time.sleep(15)
-            send_ngrok_link()
+                say_to_serial("sms sending?")
+                time.sleep(15)
+                send_ngrok_link()
     except Exception as ott: # pylint: disable=broad-except
         exception_logger("one_time_task", ott)
 

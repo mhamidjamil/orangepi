@@ -32,7 +32,7 @@ def update_serial_port(device):
             print(f"No available ports (tried up to {max_port_number}). Retrying in 10 seconds...")
             time.sleep(10)
             send_warning(device + " port not initialized retry in 10 seconds")
-            update_serial_port("/dev/ttyUSB")
+            update_serial_port(device)
     except Exception as usp_e: # pylint: disable=broad-except
         send_error("Some thing bad happened in: update_serial_port: error: " + usp_e)
         return None
@@ -60,7 +60,7 @@ def led_off():
 def flash():
     """to flash led"""
     led_on()
-    time.sleep(5)
+    # time.sleep(5)
     led_off()
 
 # Buzzer related functionality =>
@@ -76,7 +76,7 @@ def buzzer_off():
 def beep():
     """to beep"""
     buzzer_on()
-    time.sleep(2)
+    # time.sleep(2)
     buzzer_off()
 
 # def beep(number_of_beeps, beep_for):

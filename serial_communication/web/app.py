@@ -5,7 +5,6 @@ import sys
 import random
 import multiprocessing
 import threading
-from datetime import datetime
 from flask import jsonify, Flask, render_template, request
 import serial
 import serial.tools.list_ports
@@ -14,7 +13,7 @@ from routes.serial_handler import (
     set_serial_object, read_serial_data, update_time,
     update_namaz_time, send_ngrok_link, say_to_serial,
     is_ngrok_link_sent, send_message, exception_logger,
-    sync_company_numbers
+    sync_company_numbers, fetch_current_time_online
 )
 from routes.route import send_auth
 from routes.uptime_checker import is_uptime_greater_than_threshold
@@ -84,20 +83,21 @@ def read_serial():
     try:
         if ser:
             raw_data = ser.readline()
-            data = raw_data.decode('utf-8')
+            data = raw_data.decode('utf-8')  # Decode bytes to string
             read_serial_data(data)
-            return {'data': data.strip()} # Strip whitespace from the data
-        return {'error': 'Serial port not accessible'}
+            return jsonify({'data': data.strip()})  # Return JSON response
+        return jsonify({'error': 'Serial port not accessible'})
     except UnicodeDecodeError as ud:
         exception_logger("read_serial UnicodeDecodeError", ud)
         print(f"Problematic data: {raw_data}")
-        return {'result': 'error', 'message': 'UnicodeDecodeError', 'data': raw_data}
+        return jsonify({'result': 'error', 'message': 'UnicodeDecodeError',
+             'data': raw_data.decode('utf-8')})
     except serial.SerialException as rs:
         BG_TASK = False
         update_serial_port(TTGO_TCALL_PORT)
         BG_TASK = True
         exception_logger("read_serial SerialException", rs)
-        return {'result': 'error', 'message': 'Error reading from serial port'}
+        return jsonify({'result': 'error', 'message': 'Error reading from serial port'})
 
 @app.route('/send_serial', methods=['POST'])
 def send_serial():
@@ -172,14 +172,12 @@ def one_time_task():
 if __name__ == '__main__':
     try:
         # lsof -i :6677 #to know which process is using this port
-        current_time = datetime.now()
         initialize_port()
         flash()
         beep()
-        formatted_time = current_time.strftime("%H:%M:%S")
-        print(f"Main script last run time: {formatted_time}")
+        print(f"Main script last run time: {fetch_current_time_online()}")
         script_rebooted = is_uptime_greater_than_threshold(10)
-        send_info(f"\n\nMain script started at: {formatted_time} and "
+        send_info(f"\n\nMain script started at: {fetch_current_time_online()} and "
                  f"{'run manually' if script_rebooted else 'run by service'}")
 
         if len(sys.argv) > 1:
@@ -202,7 +200,7 @@ if __name__ == '__main__':
 
         thread = threading.Thread(target=update_schedule)
         thread2 = threading.Thread(target=one_time_task)
-        send_warning("app started")
+        send_info("app started")
         thread.start()
         thread2.start()
         app.run(host='0.0.0.0', port=6677, debug=False) #don't move above thread work

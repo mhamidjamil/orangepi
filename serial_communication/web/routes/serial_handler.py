@@ -21,7 +21,7 @@ SERIAL_PORT = None
 NGROK_LINK_SENT = False
 EXCEPTION_LOGGER_FILE_NAME = "exception_logs"
 EXTENSION_TYPE = ".txt"
-DEFAULT_PORT = os.getenv("_DEFAULT_PORT_")
+DEFAULT_PORT = os.getenv("_DEFAULT_NGROK_PORT_")
 
 SECONDARY_NUMBER_FOR_NGROK = os.getenv("_SECONDARY_NUMBER_FOR_NGROK_")
 SEND_MESSAGE_TO_SECONDARY_NUMBER = os.getenv("_SEND_MESSAGE_TO_SECONDARY_NUMBER_")
@@ -60,7 +60,7 @@ def send_ngrok_link(target_port=None):
     try:
         global CURRENT_NGROK_LINK, NGROK_LINK_SENT # pylint: disable=global-statement
         if CURRENT_NGROK_LINK is None or target_port is not None:
-            #if function is called first time or with custom targer_port number
+            #if function is called first time or with custom target_port number
             stop_ngrok()
             time.sleep(2)
             ngrok.set_auth_token(os.getenv("NGROK_TOKEN"))
@@ -181,7 +181,7 @@ def read_serial_data(data):
                 if "end_of_file" in data:
                     LOGS_RECEIVING = False
                     print("logs received saving them")
-                    write_in_file("logs.txt", LOG_DATA)
+                    write_in_file("logs", LOG_DATA)
                     LOG_DATA = ""
             elif "send time" in data or "update time" in data or "send updated time" in data:
                 update_time()
@@ -191,15 +191,25 @@ def read_serial_data(data):
                 print(f"sending : {msg}")
                 send_to_serial_port(msg)
             elif "untrained_message:" in data:
-                temp_str = re.search(
-                    r'untrained_message:(.*?) from', data).group(1).strip()
-                sender_number = re.search(r'from : {_([^_]*)_', data).group(1)
-                new_message_number = re.search(r'<_(\d+)_>', data).group(1)
+                print(f"Trying to understand untrained message[{data}]")
+                message_pattern = r'_\[_([^]]+)_\]_'
+                phone_number_pattern = r'_\{_(\+\d+)_\}_'
+                index_pattern = r'_\(_(\d+)_\)_'
 
-                print(f"Extracted message: {temp_str}")
-                print(f"Extracted sender_number: {sender_number}")
-                print(f"Extracted new_message_number: {new_message_number}")
-                process_untrained_message(temp_str, new_message_number)
+                message_match = re.search(message_pattern, data)
+                phone_number_match = re.search(phone_number_pattern, data)
+                index_match = re.search(index_pattern, data)
+
+                # Storing the extracted data in variables
+                message = message_match.group(1) if message_match else None
+                phone_number = phone_number_match.group(1) if phone_number_match else None
+                index = index_match.group(1) if index_match else None
+
+                # Printing the extracted data
+                print("Message:", message)
+                print("Phone Number:", phone_number)
+                print("Index:", index)
+                process_untrained_message(message, phone_number)
             elif "send bypass key" in data:
                 say_to_serial("bypass key: " + os.getenv("BYPASS_KEY"))
             else:
@@ -207,44 +217,60 @@ def read_serial_data(data):
     except Exception as e: # pylint: disable=broad-except
         exception_logger("read_serial_data", e)
 
-def process_untrained_message(temp_str, new_message_number):
+def process_untrained_message(message, sender_number):
     """Untrained messages will be executed and deleted from stack"""
     try:
-        send_warning(f"untrained message received from {new_message_number} working on it.")
-        if "restart op" in temp_str or "restart" in temp_str:
+        message_executed = False
+        send_warning(f"untrained message received from {sender_number} working on it.")
+        if "restart op" in message or "restart" in message:
             print(
                 f"Asking TTGO to delete the message "
-                f"{new_message_number} and rebooting the system...")
-            send_to_serial_port("delete " + new_message_number)
+                f"{sender_number} and rebooting the system...")
+            send_to_serial_port("delete " + sender_number)
             time.sleep(3)
-            reboot_system()
-        elif "send ngrok link" in temp_str:
+            if "4888420" in sender_number or os.getenv("BYPASS_KEY") in message:
+                reboot_system()
+            else:
+                send_error("Unauthorize person try to reboot"
+                           f" message: {message}, number: {sender_number}")
+        elif "send ngrok link" in message:
             print(
                 f"Asking TTGO to delete the message "
-                f"{new_message_number} and sending ngrok link...")
-            send_to_serial_port("delete " + new_message_number)
+                f"{sender_number} and sending ngrok link...")
             time.sleep(2)
             send_ngrok_link()
             print(f"ngrok link: {CURRENT_NGROK_LINK}")
-        elif "send new ngrok link" in temp_str:
+            message_executed = True
+        elif "send new ngrok link" in message:
             print(
                 f"Asking TTGO to delete the message "
-                f"{new_message_number} and sending ngrok link...")
-            send_to_serial_port("delete " + new_message_number)
+                f"{sender_number} and sending ngrok link...")
             time.sleep(2)
             send_ngrok_link(DEFAULT_PORT)
             print(f"ngrok link: {CURRENT_NGROK_LINK}")
-        elif "ngrok on" in temp_str:
-            match = re.search(r'ngrok on (\d+)', temp_str)
+            message_executed = True
+        elif "ngrok on" in message:
+            match = re.search(r'ngrok on (\d+)', message)
             custom_port_number = int(match.group(1))
             print(
                 f"Asking TTGO to delete the message "
-                f"{new_message_number} and sending ngrok link"
+                f"{sender_number} and sending ngrok link"
                 f" for port {custom_port_number}...")
-            send_to_serial_port("delete " + new_message_number)
             time.sleep(3)
             send_ngrok_link(custom_port_number)
             print(f"ngrok link: {CURRENT_NGROK_LINK}")
+            message_executed = True
+
+        if message_executed:
+            if "isDemo" not in message:
+                send_to_serial_port("delete " + sender_number)
+            else:
+                print("Skipping demo message")
+        else:
+            print("Message is also not recognizable by python script")
+            send_error("\n\t\t***\nMessage is also not recognizable by python script\n"
+                       f" message: [{message}] send by {sender_number}\n\n")
+
     except Exception as e: # pylint: disable=broad-except
         exception_logger("process_untrained_message", e)
 
@@ -258,7 +284,7 @@ def fetch_current_time_online():
         data = response.json()
         current_time = datetime.datetime.fromisoformat(data['datetime'])
         formatted_time = current_time.strftime("%y/%m/%d,%H:%M:%S")
-        return f"py_time:{formatted_time}+20"
+        return str(formatted_time)
     except requests.exceptions.RequestException as e:
         exception_logger("fetch_current_time_online", e)
         return None
@@ -290,7 +316,7 @@ def update_time():
         current_time = fetch_current_time_online()
         if current_time:
             print(f"Current time in Karachi: {current_time}")
-            send_to_serial_port(current_time)
+            send_to_serial_port("py_time:" + current_time + "+20")
         else:
             print("Failed to fetch current time.")
     except Exception as e: # pylint: disable=broad-except
@@ -359,8 +385,8 @@ def connected_with_internet():
 def exception_logger(function_name, error):
     """Work as a logger (additional logging with function name)"""
     if connected_with_internet():
-        send_error(f"Error in {function_name}"
-                 f"Error message: {error} at: {fetch_current_time_online()}")
+        send_error(f"Error in {function_name}."
+                 f"\tError message: {error} at: {fetch_current_time_online()}")
         msg = f"\n------------>\n Exception occur in {function_name} function." + \
                 "\n Error message: " + str(error) + "\n<--------------\n"
         print(msg)

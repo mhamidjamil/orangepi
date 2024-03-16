@@ -18,7 +18,7 @@ from routes.serial_handler import (
 from routes.route import send_auth
 from routes.uptime_checker import is_uptime_greater_than_threshold
 from routes.communication.ntfy import send_warning, send_info
-from routes.watcher import initialize_port, blink, update_serial_port
+from routes.watcher import initialize_port, blink, update_serial_port, watcher
 
 BG_TASK = True
 BOOT_MESSAGE_SEND = False
@@ -114,6 +114,14 @@ def send_serial():
 def send_auth_route():
     """Send authentication."""
     return send_auth()
+
+
+# @app.route('/watcher', methods=['GET'])
+# def send_auth_route():
+#     """Manage led and buzzer."""
+#     return watcher()
+
+app.add_url_rule('/watcher', 'watcher', watcher)
 
 @app.route('/inspect', methods=['GET'])
 def inspect():

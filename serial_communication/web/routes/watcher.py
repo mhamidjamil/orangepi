@@ -4,11 +4,15 @@ import time
 import threading
 import serial
 import serial.tools.list_ports
+from flask import request
 from .communication.ntfy import send_warning, send_error, send_info #pylint: disable=relative-beyond-top-level
 
 SERIAL_PORT = None
 MAX_RETRIES = 2
 MAX_RETRY_TIME = 30
+
+LED_STATE = False
+BUZZER_STATE = False
 
 def initialize_port():
     """This part will initialize serial port for watcher"""
@@ -59,13 +63,24 @@ def send_to_serial_port(serial_data):
 
 #LED related functionality =>
 
+def led(state):
+    """Change led state"""
+    if state:
+        led_on()
+    else:
+        led_off()
+
 
 def led_on():
     "to turn LED on"
+    global LED_STATE # pylint: disable=global-statement
+    LED_STATE = True
     send_to_serial_port("led on")
 
 def led_off():
     "to turn LED off"
+    global LED_STATE  # pylint: disable=global-statement
+    LED_STATE = False
     send_to_serial_port("led off")
 
 def flash(n=1, delay=1):
@@ -80,21 +95,32 @@ def flash(n=1, delay=1):
         while thread_led_off.is_alive():
             time.sleep(1)
 
+
 # Buzzer related functionality =>
+
+def buzzer(state):
+    "Change buzzer state"
+    if state:
+        buzzer_on()
+    else:
+        buzzer_off()
 
 def buzzer_on():
     "to turn Buzzer on"
+    global BUZZER_STATE  # pylint: disable=global-statement
+    BUZZER_STATE = True
     send_to_serial_port("buzzer on")
 
 def buzzer_off():
     "to turn Buzzer off"
+    global BUZZER_STATE  # pylint: disable=global-statement
+    BUZZER_STATE = False
     send_to_serial_port("buzzer off")
 
 def blink(n=1, delay=1000):
     """Blink LED for n times."""
     print(f"Blink is called with params: n: {n} and delay: {delay}")
     send_to_serial_port(f"blink for {{{n}}} delay: [{delay}]")
-
 
 def beep():
     """to beep"""
@@ -104,6 +130,58 @@ def beep():
     t = threading.Thread(target=buzzer_off)
     while t.is_alive():
         time.sleep(1)
+
+def watcher(): #pylint: disable=too-many-branches
+    """Deal with api calls"""
+    variable_name = None
+    variable_value = None
+
+    # Check if 'led' or 'buzzer' parameter is in the query string
+    if 'led' in request.args:
+        variable_name = 'led'
+        variable_value = request.args['led']
+        print(f"\n\n\tLed power: {variable_value}")
+        if "on" in variable_value:
+            led_on()
+        elif "off" in variable_value:
+            led_off()
+        elif "toggle" in variable_value:
+            if LED_STATE:
+                led_off()
+            else:
+                led_on()
+        else:
+            print("\t\t!__Unknown input__!")
+    elif 'buzzer' in request.args:
+        variable_name = 'buzzer'
+        variable_value = request.args['buzzer']
+        print(f"\n\n\tBuzzer power: {variable_value}")
+        if "on" in variable_value:
+            buzzer_on()
+        elif "off" in variable_value:
+            buzzer_off()
+        elif "toggle" in variable_value:
+            if BUZZER_STATE:
+                buzzer_off()
+            else:
+                buzzer_on()
+        else:
+            print("\t\t!__Unknown input__!")
+    else:
+        # Handle case when no variable is provided in the query string
+        return "No variable provided", 400  # Return HTTP status code 400 for Bad Request
+
+    # Now you have the variable name and its value, you can perform actions based on them
+    # For example:
+    if variable_value == 'on':
+        # Do something when the variable is 'on'
+        pass
+    elif variable_value == 'off':
+        # Do something when the variable is 'off'
+        pass
+
+    # Return a response indicating the variable name and value
+    return f"Variable name: {variable_name}, Value: {variable_value}"
 
 # def beep(number_of_beeps, beep_for):
 if __name__ == '__main__':

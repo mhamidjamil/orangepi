@@ -14,7 +14,7 @@ This is a simple web application that allows you to view and interact with seria
    Make sure you have Python, Flask, and PySerial installed.
 
    ```bash
-   pip install Flask pyserial schedule requests beautifulsoup4 pyngrok python-dotenv
+   pip install Flask pyserial schedule requests beautifulsoup4 pyngrok python-dotenv pygame
    ```
 
 2. **Run the App:**

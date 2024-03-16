@@ -18,7 +18,7 @@ from routes.serial_handler import (
 from routes.route import send_auth
 from routes.uptime_checker import is_uptime_greater_than_threshold
 from routes.communication.ntfy import send_warning, send_info
-from routes.watcher import initialize_port, flash, beep, update_serial_port
+from routes.watcher import initialize_port, blink, update_serial_port
 
 BG_TASK = True
 BOOT_MESSAGE_SEND = False
@@ -155,6 +155,8 @@ def one_time_task():
     """Execute one-time tasks."""
     try:
         global BOOT_MESSAGE_SEND # pylint: disable=global-statement
+        update_time()
+        update_namaz_time()
         if not is_ngrok_link_sent():
             time.sleep(10)
             if not TESTING_ENVIRONMENT:
@@ -169,12 +171,24 @@ def one_time_task():
     except Exception as ott: # pylint: disable=broad-except
         exception_logger("one_time_task", ott)
 
+def initialize_port_in_thread():
+    """This will initialize Watcher in separate thread"""
+    t1 = threading.Thread(target=initialize_port)
+    t1.start()
+    while t1.is_alive():
+        time.sleep(1)
+
+    t1 = threading.Thread(target=blink, args=(5,100))
+    t1.start()
+    while t1.is_alive():
+        time.sleep(1)
+
+    # t.join()  # Wait for the thread to finish
+
 if __name__ == '__main__':
     try:
         # lsof -i :6677 #to know which process is using this port
-        initialize_port()
-        flash()
-        beep()
+        initialize_port_in_thread()
         print(f"Main script last run time: {fetch_current_time_online()}")
         script_rebooted = is_uptime_greater_than_threshold(10)
         send_info(f"\n\nMain script started at: {fetch_current_time_online()} and "

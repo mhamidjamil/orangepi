@@ -1,45 +1,68 @@
-**Edit a file, create a new file, and clone from Bitbucket in under 2 minutes**
+# Orange Pi with ESP32 TTGO TCall
 
-When you're done, you can delete the content in this README and update the file with details for others getting started with your repository.
+![Workflow Status](https://github.com/mhamidjamil/orangePi/workflows/Pylint/badge.svg)
 
-*We recommend that you open this README in another tab as you perform the tasks below. You can [watch our video](https://youtu.be/0ocf7u76WSo) for a full demo of all the steps in this tutorial. Open the video in a new tab to avoid leaving Bitbucket.*
+In this repository, Python scripts are employed to automate a myriad of tasks, facilitating seamless communication with various interconnected projects. The codebase serves as a robust foundation for orchestrating and streamlining operations, promoting efficiency and coordination across multiple facets of the project ecosystem.
 
----
+# Serial Interface Web App
 
-## Edit a file
+This is a simple web application that allows you to view and interact with serial data from a device connected to your Orange Pi 5 Plus.
 
-You’ll start by editing this README file to learn how to edit a file in Bitbucket.
+## Getting Started
 
-1. Click **Source** on the left side.
-2. Click the README.md link from the list of files.
-3. Click the **Edit** button.
-4. Delete the following text: *Delete this line to make a change to the README from Bitbucket.*
-5. After making your change, click **Commit** and then **Commit** again in the dialog. The commit page will open and you’ll see the change you just made.
-6. Go back to the **Source** page.
+1. **Install Dependencies:**
+   Make sure you have Python, Flask, and PySerial installed.
 
----
+   ```bash
+   pip install Flask pyserial schedule requests beautifulsoup4 pyngrok python-dotenv pygame
+   ```
 
-## Create a file
+2. **Run the App:**
+   Open a terminal, navigate to the project directory, and run:
 
-Next, you’ll add a new file to this repository.
+   ```bash
+   python app.py
+   ```
 
-1. Click the **New file** button at the top of the **Source** page.
-2. Give the file a filename of **contributors.txt**.
-3. Enter your name in the empty file space.
-4. Click **Commit** and then **Commit** again in the dialog.
-5. Go back to the **Source** page.
+   Access the web interface at `http://127.0.0.1:6677` or `http://localhost:6677`. Replace the address with the IP of your Orange Pi for network access.
 
-Before you move on, go ahead and explore the repository. You've already seen the **Source** page, but check out the **Commits**, **Branches**, and **Settings** pages.
+3. **Usage:**
 
----
+   - The web page displays real-time serial data from the connected device.
+   - Use the input field to send data back to the device.
 
-## Clone a repository
+4. **Customization:**
+   - Modify the Python script (`app.py`) to adjust the serial port or customize the interface.
+   - Update the HTML template (`templates/index.html`) to change the look and feel.
 
-Use these steps to clone from SourceTree, our client for using the repository command-line free. Cloning allows you to work on your files locally. If you don't yet have SourceTree, [download and install first](https://www.sourcetreeapp.com/). If you prefer to clone from the command line, see [Clone a repository](https://confluence.atlassian.com/x/4whODQ).
+## Dependencies
 
-1. You’ll see the clone button under the **Source** heading. Click that button.
-2. Now click **Check out in SourceTree**. You may need to create a SourceTree account or log in.
-3. When you see the **Clone New** dialog in SourceTree, update the destination path and name if you’d like to and then click **Clone**.
-4. Open the directory you just created to see your repository’s files.
+- Python
+- Flask
+- PySerial
+- see [discussions](https://github.com/mhamidjamil/orangePi/discussions/15) for more details
 
-Now that you're more familiar with your Bitbucket repository, go ahead and add a new file locally. You can [push your change back to Bitbucket with SourceTree](https://confluence.atlassian.com/x/iqyBMg), or you can [add, commit,](https://confluence.atlassian.com/x/8QhODQ) and [push from the command line](https://confluence.atlassian.com/x/NQ0zDQ).
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+- How Orange Pi send commands to TTGO-TCall:
+  {hay ttgo-tcall! here goes the query?}
+- How TTGO_TCall send commands to Orange Pi:
+  {hay orange-pi! here goes the query?}
+Certainly! Here's a concise note for your README file:
+
+New feature added to this project offers a streamlined solution for fetching upcoming Namaz (prayer) times and the current time, tailored for Lahore/Punjab, Pakistan. Additionally, it seamlessly integrates with the [TTGO TCall](https://github.com/mhamidjamil/TTGO_TCall) project, allowing users to leverage it as a Two-Factor Authentication (2FA) method.
+
+**Key Features:**
+
+- Retrieve Namaz Times for Lahore/Punjab, Pakistan.
+- Obtain Current Time in the Local Time Zone.
+- Integration with TTGO TCall for 2FA Verification.
+
+**Usage:**
+
+To unlock the full potential of the 2FA feature, it is recommended to combine the functionalities of both the OrangePi and TTGO TCall projects.
+
+Note:
+Read me file might be out dated as I add almost 2 to 3 new features per week so do check closed issues to know which new feature is added.

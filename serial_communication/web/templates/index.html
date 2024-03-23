@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serial Interface</title>
+    <div id="serial-data"
+        style="resize: both; overflow: auto; max-height: 600px; border: 1px solid #ccc; padding: 10px;"
+        class="auto-scroll">
+        <!-- Display serial data here -->
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+</head>
+
+<body>
+    <h1>Serial Interface</h1>
+
+    <div id="serial-data">
+        <!-- Display serial data here -->
+    </div>
+
+    <form id="serial-form">
+        <label for="data-input">Send Serial Data:</label>
+        <input type="text" id="data-input" name="data" required>
+
+        <label for="port-select">Select Serial Port:</label>
+        <select id="port-select" name="serialPort">
+            {% for port_info in available_ports %}
+            <option value="{{ port_info['port'] }}" {% if port_info['port']==default_port['port'] %}selected{% endif %}>
+                {{ port_info['port'] }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <label for="baud-rate-select">Select Baud Rate:</label>
+        <select id="baud-rate-select" name="baudRate">
+            {% for baud_rate in baud_rates %}
+            <option value="{{ baud_rate }}" {% if baud_rate==115200 %}selected{% endif %}>{{ baud_rate }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="auto-scroll-checkbox">Auto Scroll:</label>
+        <input type="checkbox" id="auto-scroll-checkbox" checked>
+
+        <button type="submit" id="send-button">Send</button>
+        <button type="button" id="clear-button">Clear</button>
+    </form>
+
+    <script>
+        // JavaScript for fetching and displaying serial data
+        function fetchSerialData() {
+            fetch(`/read_serial?_=${new Date().getTime()}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Append the new data to the existing content with different color for received data
+                    const serialData = document.getElementById('serial-data');
+                    serialData.innerHTML += `<span style="color: blue;">${data.data}</span><br>`;
+
+                    // Scroll to the bottom to show the latest data if auto-scroll is enabled
+                    if (document.getElementById('auto-scroll-checkbox').checked) {
+                        serialData.scrollTop = serialData.scrollHeight;
+                    }
+
+                    fetchSerialData(); // Fetch data again for real-time updates
+                });
+        }
+
+        // Fetch serial data when the page loads
+        document.addEventListener('DOMContentLoaded', function () {
+            fetchSerialData();
+        });
+
+        // JavaScript for sending serial data
+        document.getElementById('serial-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            fetch('/send_serial', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Data sent successfully:', data);
+                    // You can update the UI or provide feedback to the user here
+                    document.getElementById('data-input').value = ''; // Clear input field
+                    // Append the sent data to the serial terminal with different color
+                    const serialData = document.getElementById('serial-data');
+                    const sentData = document.getElementById('data-input').value;
+                    serialData.innerHTML += `<span style="color: green;">${sentData}</span><br>`;
+                    // Scroll to the bottom after sending data
+                    if (document.getElementById('auto-scroll-checkbox').checked) {
+                        const serialData = document.getElementById('serial-data');
+                        serialData.scrollTop = serialData.scrollHeight;
+                    }
+                });
+        });
+
+        // JavaScript for clearing serial data
+        document.getElementById('clear-button').addEventListener('click', function () {
+            document.getElementById('serial-data').innerText = ''; // Clear serial data
+        });
+
+        document.getElementById('port-select').addEventListener('change', function (event) {
+            var selectedPort = event.target.value;
+            console.log("Selected Port:", selectedPort);
+
+            // Send an AJAX request to update the port on the server
+            fetch('/update_port', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ port: selectedPort })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Updated port successfully:", data);
+                    // You can update the UI or provide feedback to the user here
+                })
+                .catch(error => {
+                    console.error('Error updating port:', error);
+                });
+
+            location.reload();
+        });
+    </script>
+</body>
+
+</html>

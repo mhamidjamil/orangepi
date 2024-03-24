@@ -2,10 +2,12 @@
 import subprocess
 import sys
 import logging
+import shlex
 import os
 from dotenv import load_dotenv
 
 # Specify the path to your .env file
+#FIXME: remove this hardcode address
 DOTENV_PATH = '/home/orangepi/Desktop/projects/orangePi/serial_communication/web/.env'
 load_dotenv(DOTENV_PATH)
 SAVE_LOGS = True
@@ -23,7 +25,7 @@ def send_to_android(endpoint, message):
     if NTFY_URL is None:
         print("Make sure you env file is on Write location.")
     else:
-        command = f"curl -d {message} {NTFY_URL}/{endpoint}"
+        command = f"curl -d {shlex.quote(message)} {NTFY_URL}/{endpoint}"
         # curl -d testing 192.168.1.239:9999/warnings
         try:
             result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)

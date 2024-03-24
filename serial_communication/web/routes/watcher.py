@@ -4,7 +4,7 @@ import time
 import threading
 import serial
 import serial.tools.list_ports
-from flask import request
+from flask import jsonify, request
 from .communication.ntfy import send_warning, send_error, send_info #pylint: disable=relative-beyond-top-level
 
 SERIAL_PORT = None
@@ -133,12 +133,12 @@ def beep():
 
 def watcher(): #pylint: disable=too-many-branches
     """Deal with api calls"""
-    variable_name = None
+    send_info(f"API called with params: {request.args}")
     variable_value = None
 
+    # print(f"API called received with data: {request.args}")
     # Check if 'led' or 'buzzer' parameter is in the query string
     if 'led' in request.args:
-        variable_name = 'led'
         variable_value = request.args['led']
         print(f"\n\n\tLed power: {variable_value}")
         if "on" in variable_value:
@@ -153,7 +153,6 @@ def watcher(): #pylint: disable=too-many-branches
         else:
             print("\t\t!__Unknown input__!")
     elif 'buzzer' in request.args:
-        variable_name = 'buzzer'
         variable_value = request.args['buzzer']
         print(f"\n\n\tBuzzer power: {variable_value}")
         if "on" in variable_value:
@@ -169,19 +168,14 @@ def watcher(): #pylint: disable=too-many-branches
             print("\t\t!__Unknown input__!")
     else:
         # Handle case when no variable is provided in the query string
-        return "No variable provided", 400  # Return HTTP status code 400 for Bad Request
-
-    # Now you have the variable name and its value, you can perform actions based on them
-    # For example:
-    if variable_value == 'on':
-        # Do something when the variable is 'on'
-        pass
-    elif variable_value == 'off':
-        # Do something when the variable is 'off'
-        pass
+        if 'status' in request.args:
+            return jsonify({'LED': LED_STATE, 'BUZZER': BUZZER_STATE})
+        else:
+            print(f"Error happens in API call args data: {request.args}")
+            return "No variable provided", 400  # Return HTTP status code 400 for Bad Request
 
     # Return a response indicating the variable name and value
-    return f"Variable name: {variable_name}, Value: {variable_value}"
+    return jsonify({'LED': LED_STATE, 'BUZZER': BUZZER_STATE})
 
 # def beep(number_of_beeps, beep_for):
 if __name__ == '__main__':

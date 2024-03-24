@@ -1,0 +1,27 @@
+# cd /opt/homeassistant/config
+# sudo nano configuration.yml
+
+rest_command:
+  led_toggle:
+    url: "http://192.168.1.239:6677/watcher?led=toggle"
+    method: "get"
+
+  led_on:
+    url: "http://192.168.1.239:6677/watcher?led=on"
+    method: "get"
+
+  led_off:
+    url: "http://192.168.1.239:6677/watcher?led=off"
+    method: "get"
+
+  status:
+    url: "http://192.168.1.239:6677/watcher?status"
+    method: "get"
+
+sensor:
+  - platform: rest
+    name: "Status Response"
+    resource: "http://192.168.1.239:6677/watcher?status"
+    method: GET
+    scan_interval: "00:01:00"
+    value_template: "{{ value_json.LED }}"

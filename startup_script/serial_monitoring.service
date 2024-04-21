@@ -1,0 +1,21 @@
+# put file in this directory:
+# /etc/systemd/system/serial_monitoring.service
+# sudo nano /etc/systemd/system/serial_monitoring.service
+# file data:
+
+[Unit]
+Description=My Python Service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/orangepi/Desktop/projects/orangepi/serial_communication/web/app.py --from-service
+Restart=always
+User=orangepi
+
+[Install]
+WantedBy=default.target
+
+
+# After that run these commands:
+# sudo systemctl daemon-reload
+# sudo systemctl enable serial_monitoring.service

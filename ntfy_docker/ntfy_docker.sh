@@ -15,7 +15,8 @@
 
 
 # Start the ntfy docker at startup
-docker start magical_dubinsky
+# Don't forget to change the name
+docker start clever_goodall
 
 
 # We are not done yet

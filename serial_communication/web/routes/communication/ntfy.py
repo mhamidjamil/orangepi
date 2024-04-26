@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 # Specify the path to your .env file
 #FIXME: remove this hardcode address
-DOTENV_PATH = '/home/orangepi/Desktop/projects/orangePi/serial_communication/web/.env'
+DOTENV_PATH = '/home/orangepi/Desktop/projects/orangepi/serial_communication/web/.env'
 load_dotenv(DOTENV_PATH)
 SAVE_LOGS = True
 

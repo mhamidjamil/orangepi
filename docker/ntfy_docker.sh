@@ -28,5 +28,5 @@ docker start clever_goodall
 # Open up a required file by running this in terminal:
 # export VISUAL=nano; crontab -e
 # Paste this line at the end of that file:
-# @reboot /home/orangepi/Desktop/projects/orangePi/ntfy_docker/ntfy_docker.sh
+# @reboot /home/orangepi/Desktop/projects/orangepi/docker/ntfy_docker.sh
 

@@ -6,6 +6,7 @@ import serial
 import serial.tools.list_ports
 from flask import jsonify, request
 from .communication.ntfy import send_warning, send_error, send_info #pylint: disable=relative-beyond-top-level
+from .serial_handler import exception_logger #pylint: disable=relative-beyond-top-level
 
 SERIAL_PORT = None
 MAX_RETRIES = 2
@@ -56,9 +57,11 @@ def send_to_serial_port(serial_data):
         if "max reties reached!" in SERIAL_PORT:
             return
         print(f"Sending data to serial port: {serial_data}")
-        SERIAL_PORT.write(serial_data.encode())
+        SERIAL_PORT.write(serial_data.encode('utf-8'))
     except serial.SerialException as e: # pylint: disable=broad-except
         send_error("error in watcher: send_to_SERIAL_PORT"+ e)
+    except Exception as e: # pylint: disable=broad-except
+        exception_logger("update_time", e)
 
 
 #LED related functionality =>
@@ -170,9 +173,8 @@ def watcher(): #pylint: disable=too-many-branches
         # Handle case when no variable is provided in the query string
         if 'status' in request.args:
             return jsonify({'LED': LED_STATE, 'BUZZER': BUZZER_STATE})
-        else:
-            print(f"Error happens in API call args data: {request.args}")
-            return "No variable provided", 400  # Return HTTP status code 400 for Bad Request
+        print(f"Error happens in API call args data: {request.args}")
+        return "No variable provided", 400  # Return HTTP status code 400 for Bad Request
 
     # Return a response indicating the variable name and value
     return jsonify({'LED': LED_STATE, 'BUZZER': BUZZER_STATE})

@@ -26,18 +26,16 @@ DEFAULT_PORT = os.getenv("_DEFAULT_NGROK_PORT_")
 SECONDARY_NUMBER_FOR_NGROK = os.getenv("_SECONDARY_NUMBER_FOR_NGROK_")
 SEND_MESSAGE_TO_SECONDARY_NUMBER = os.getenv("_SEND_MESSAGE_TO_SECONDARY_NUMBER_")
 MESSAGE_SEND_TO_CUSTOM_NUMBER = False
-
+USE_MODULE_TIME = False
 
 def is_ngrok_link_sent():
     """method to know if the NGROK link is send or not"""
     return NGROK_LINK_SENT
 
-
 def set_serial_object(serial_object):
     """Define serial port for this file"""
     global SERIAL_PORT # pylint: disable=global-statement
     SERIAL_PORT = serial_object
-
 
 def reboot_system():
     """Used to reboot the system on message"""
@@ -53,7 +51,6 @@ def reboot_system():
                        input=f"{password}\n", text=True, check=True)
     except subprocess.CalledProcessError as e:
         exception_logger("reboot_system", e)
-
 
 def send_ngrok_link(target_port=None):
     """Will send NGROK link via message"""
@@ -107,7 +104,6 @@ def send_ngrok_link(target_port=None):
     except Exception as e: # pylint: disable=broad-except
         print("NGROK not initialized")
         write_in_file("ngrok_logger", "\nERROR:\n" + str(e))
-
 
 def update_namaz_time():
     """Will update update namaz time on TTGO-TCall"""
@@ -167,7 +163,6 @@ def update_namaz_time():
     except Exception as e: # pylint: disable=broad-except
         exception_logger("update_namaz_time", e)
         return None
-
 
 def read_serial_data(data):
     """read TTGO-Tcall serial data"""
@@ -233,20 +228,19 @@ def process_untrained_message(message, sender_number):
             else:
                 send_error("Unauthorize person try to reboot"
                            f" message: {message}, number: {sender_number}")
+        elif "send new ngrok link" in message or "resend ngrok link" in message:
+            print(f"Asking TTGO to delete the message "
+                f"{sender_number} and sending ngrok link...")
+            time.sleep(2)
+            send_ngrok_link(DEFAULT_PORT)
+            print(f"ngrok link: {CURRENT_NGROK_LINK}")
+            message_executed = True
         elif "send ngrok link" in message:
             print(
                 f"Asking TTGO to delete the message "
                 f"{sender_number} and sending ngrok link...")
             time.sleep(2)
             send_ngrok_link()
-            print(f"ngrok link: {CURRENT_NGROK_LINK}")
-            message_executed = True
-        elif "send new ngrok link" in message:
-            print(
-                f"Asking TTGO to delete the message "
-                f"{sender_number} and sending ngrok link...")
-            time.sleep(2)
-            send_ngrok_link(DEFAULT_PORT)
             print(f"ngrok link: {CURRENT_NGROK_LINK}")
             message_executed = True
         elif "ngrok on" in message:
@@ -278,37 +272,49 @@ def fetch_current_time_online():
     # TODO: need to separate this part from py_time # pylint: disable=fixme
     """Return current time after fetching from online source for TTGO-TCall"""
     try:
-        response = requests.get(
-            'http://worldtimeapi.org/api/timezone/Asia/Karachi', timeout=10)
+        global USE_MODULE_TIME # pylint: disable=global-statement
+        if not USE_MODULE_TIME:
+            response = requests.get(
+                'http://worldtimeapi.org/api/timezone/Asia/Karachi', timeout=10)
 
-        data = response.json()
-        current_time = datetime.datetime.fromisoformat(data['datetime'])
-        formatted_time = current_time.strftime("%y/%m/%d,%H:%M:%S")
+            data = response.json()
+            current_time = datetime.datetime.fromisoformat(data['datetime'])
+            formatted_time = current_time.strftime("%y/%m/%d,%H:%M:%S")
+            if formatted_time == systemTime():
+                USE_MODULE_TIME = True
+                print("\n\t\tSystem time is same as fetched time using it.")
+            else:
+                print("\n\tSystem time is not same with the fetch one,")
+                print(f"Online time: {formatted_time}, System time: {systemTime()}")
+        else:
+            formatted_time = systemTime()
         return str(formatted_time)
     except requests.exceptions.RequestException as e:
         exception_logger("fetch_current_time_online", e)
         return None
 
-
 def say_to_serial(serial_data):
-    """This will convert the incoming string to the proper message so 
+    """This will convert the incoming string to the proper message so
     ttgo can understand that orange pi is communicating with it"""
     try:
-        serial_data = "{hay ttgo-tcall!"+serial_data+"}"
-        print(f"sending : {serial_data}")
-        send_to_serial_port(serial_data)
-    except Exception as e: # pylint: disable=broad-except
-        exception_logger("say_to_serial", e)
-
+        # Convert serial_data to string using str() function
+        serial_data_str = str(serial_data)
+        # Concatenate the strings
+        message = "{hay ttgo-tcall!" + serial_data_str + "}"
+        print(f"sending : {message}")
+        send_to_serial_port(message)
+    except Exception as e:
+        exception_logger("say_to_serial, data is received: "+str(serial_data), e)
 
 def send_to_serial_port(serial_data):
     """Will send string as it is to TTGO-TCall"""
     try:
         print(f"Sending data to serial port: {serial_data}")
-        SERIAL_PORT.write(serial_data.encode())
+        SERIAL_PORT.write(serial_data.encode('utf-8'))
     except serial.SerialException as e: # pylint: disable=broad-except
+        exception_logger("send_to_serial_port, target port in serial_handler is: " + SERIAL_PORT, e)
+    except Exception as e: # pylint: disable=broad-except
         exception_logger("send_to_serial_port", e)
-
 
 def update_time():
     """Will send updated time to TTGO-TCall"""
@@ -316,12 +322,11 @@ def update_time():
         current_time = fetch_current_time_online()
         if current_time:
             print(f"Current time in Karachi: {current_time}")
-            send_to_serial_port("py_time:" + current_time + "+20")
+            send_to_serial_port(str("py_time:" + current_time + "+20"))
         else:
             print("Failed to fetch current time.")
     except Exception as e: # pylint: disable=broad-except
         exception_logger("update_time", e)
-
 
 def stop_ngrok():
     """Need to kill NGROK if it is already running"""
@@ -331,7 +336,6 @@ def stop_ngrok():
     except Exception as e: # pylint: disable=broad-except
         exception_logger("stop_ngrok", e)
 
-
 def send_custom_message(message, number):
     """Used to send message to custom number"""
     try:
@@ -340,7 +344,6 @@ def send_custom_message(message, number):
     except Exception as e: # pylint: disable=broad-except
         exception_logger("send_message", e)
 
-
 def send_message(message):
     """Used to send sms to defined number"""
     try:
@@ -348,7 +351,6 @@ def send_message(message):
         send_to_serial_port("sms " + message)
     except Exception as e: # pylint: disable=broad-except
         exception_logger("send_message", e)
-
 
 def write_in_file(file_name, content):
     # return False
@@ -366,7 +368,6 @@ def write_in_file(file_name, content):
         print(f"An error occurred: {ex}")
         return False
 
-
 def connected_with_internet():
     """If module is not connected with internet it will try to connect"""
     while True:
@@ -380,7 +381,6 @@ def connected_with_internet():
             # Sleep for 5 minutes before checking again
             time.sleep(300)
             connected_with_internet()
-
 
 def exception_logger(function_name, error):
     """Work as a logger (additional logging with function name)"""
@@ -400,3 +400,8 @@ def exception_logger(function_name, error):
 def sync_company_numbers():
     """This function will sync company numbers from ttgo module with local file"""
     # this part ill be completed after watcher will sync with SECO
+
+def systemTime():
+    """Return system time in the format: %y/%m/%d,%H:%M:%S"""
+    return time.strftime("%y/%m/%d,%H:%M:%S")
+    

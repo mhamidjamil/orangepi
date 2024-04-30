@@ -5,6 +5,7 @@ import sys
 import random
 import multiprocessing
 import threading
+import subprocess
 from flask import jsonify, Flask, render_template, request
 import serial
 import serial.tools.list_ports
@@ -13,7 +14,7 @@ from routes.serial_handler import (
     set_serial_object, read_serial_data, update_time,
     update_namaz_time, send_ngrok_link, say_to_serial,
     is_ngrok_link_sent, send_message, exception_logger,
-    sync_company_numbers, fetch_current_time_online
+    sync_company_numbers, fetch_current_time_online, send_to_serial_port
 )
 from routes.route import send_auth
 from routes.uptime_checker import is_uptime_greater_than_threshold
@@ -96,19 +97,29 @@ def read_serial():
         BG_TASK = False
         update_serial_port(TTGO_TCALL_PORT)
         BG_TASK = True
-        exception_logger("read_serial SerialException", rs)
+        exception_logger("read_serial SerialException \n\t Restarting server at: "+fetch_current_time_online(), rs)
+        restart_flask_server() #FIXME: not a good approach to restart server.
         return jsonify({'result': 'error', 'message': 'Error reading from serial port'})
+
+def restart_flask_server():
+    # Replace 'python app.py' with the command to start your Flask server
+    command = 'python app.py'
+    process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    _, _ = process.communicate()  # Wait for the process to finish
+
 
 @app.route('/send_serial', methods=['POST'])
 def send_serial():
     """Send data to the serial port."""
     try:
         data_to_send = request.form['data']
-        ser.write(data_to_send.encode('utf-8'))
-        return {'status': 'success'}
+        if data_to_send is not None:  # Check if data_to_send is not None
+            send_to_serial_port(data_to_send)
+            return {'status': 'success'}
+        return {'status': 'error', 'message': 'Invalid data'}  # Handle invalid data
     except Exception as ss: # pylint: disable=broad-except
         exception_logger("send_serial", ss)
-        return None
+        return {'status': 'error', 'message': str(ss)}  # Return error response
 
 @app.route('/send_auth', methods=['GET'])
 def send_auth_route():

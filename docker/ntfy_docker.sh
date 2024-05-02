@@ -11,12 +11,12 @@
 # https://www.homeautomationguy.io/blog/home-assistant-tips/installing-docker-home-assistant-and-portainer-on-ubuntu-linux
 
 
-# -> Third: You need to inspect the name of ntfy docker copy that name and past at the end of file like name will look like this: magical_dubinsky
+# -> Third: You need to inspect the name of ntfy docker copy that name and past at the end of file like name will look like this: unruffled_chebyshev
 
 
 # Start the ntfy docker at startup
 # Don't forget to change the name
-docker start clever_goodall
+docker start unruffled_chebyshev
 
 
 # We are not done yet

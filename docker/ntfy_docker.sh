@@ -6,6 +6,8 @@
 # -> First: you need to install the ntfy docker you can do that with these commands:
 # sudo docker run -p 9999:80 -itd binwiederhier/ntfy serve
 
+# sudo docker run -p 9999:80 -itd --restart=unless-stopped binwiederhier/ntfy serve
+
 
 # -> Second: optional you need to install portainer you can do that by following instruction in this link:
 # https://www.homeautomationguy.io/blog/home-assistant-tips/installing-docker-home-assistant-and-portainer-on-ubuntu-linux

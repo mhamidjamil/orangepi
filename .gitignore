@@ -58,4 +58,3 @@ serial_communication/web/logs.txt.txt
 serial_communication/web/routes/exception_logs.txt
 *.pyc
 *logger.txt
-/logs

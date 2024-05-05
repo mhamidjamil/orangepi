@@ -33,6 +33,45 @@ parse_git_branch() {
 export PS1="\u@\h \[\e[32m\]\w \[\e[91m\]\$(parse_git_branch)\[\e[00m\]$ "
 ```
 
+## netData:
+
+Add this to docker-compose file in /opt
+
+```
+  netdata:
+    image: netdata/netdata:stable
+    container_name: netdata
+    pid: host
+    network_mode: host
+    restart: unless-stopped
+    cap_add:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - netdataconfig:/etc/netdata
+      - netdatalib:/var/lib/netdata
+      - netdatacache:/var/cache/netdata
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /var/log:/host/var/log:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - NETDATA_CLAIM_TOKEN=h5lSpsyoDQtZ7TqE-N9WtEjl19uVxfNpcigT9ex9dK3u5EuPMB4AH-_Z2wdNGHuJ_dCZV8TX75EUPseupUEq0nMBwZ6t9Had84HqOYhUTpm6B-37j5O6_Y-S2xop_SGIUTvHHI8
+      - NETDATA_CLAIM_URL=https://app.netdata.cloud
+      - NETDATA_CLAIM_ROOMS=851ec14e-2a88-460b-9e10-4626dce9677e
+volumes:
+  netdataconfig:
+  netdatalib:
+  netdatacache:
+```
+
+
 # Odoo setup
 
 ##  Postgres docker:

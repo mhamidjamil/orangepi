@@ -162,7 +162,7 @@ def inspect():
 if BG_TASK:
     schedule.every(2).minutes.do(update_time)
     schedule.every(5).minutes.do(update_namaz_time)
-    schedule.every(30).minutes.do(sync_company_numbers)
+    # schedule.every(30).minutes.do(sync_company_numbers)
 
 def update_schedule():
     """Update the schedule."""
@@ -191,6 +191,7 @@ def one_time_task():
         exception_logger("one_time_task", ott)
 
 def initialize_port_in_thread():
+    return
     """This will initialize Watcher in separate thread"""
     t1 = threading.Thread(target=initialize_port)
     t1.start()

@@ -120,6 +120,7 @@ def update_namaz_time():
         try:
             response = requests.get(
                 'http://worldtimeapi.org/api/timezone/Asia/Karachi', timeout=10)
+            # FIXME: We dont have to use this bad approach here 
             data = response.json()
             current_time = datetime.datetime.fromisoformat(data['datetime'])
             current_time = current_time.strftime("%I:%M %p")
@@ -300,11 +301,11 @@ def say_to_serial(serial_data):
         # Convert serial_data to string using str() function
         serial_data_str = str(serial_data)
         # Concatenate the strings
-        message = "{hay ttgo-tcall!" + serial_data_str + "}"
+        message = str("{hay ttgo-tcall!" + serial_data_str + "}")
         print(f"sending : {message}")
         send_to_serial_port(message)
     except Exception as e:
-        exception_logger("say_to_serial, data is received: "+str(serial_data), e)
+        exception_logger("say_to_serial, data is received: ["+str(serial_data)+"]", e)
 
 def send_to_serial_port(serial_data):
     """Will send string as it is to TTGO-TCall"""

@@ -14,7 +14,8 @@ from routes.serial_handler import (
     set_serial_object, read_serial_data, update_time,
     update_namaz_time, send_ngrok_link, say_to_serial,
     is_ngrok_link_sent, send_message, exception_logger,
-    sync_company_numbers, fetch_current_time_online, send_to_serial_port
+    sync_company_numbers, fetch_current_time_online,
+    send_to_serial_port, inform_supervisor
 )
 from routes.route import send_auth
 from routes.uptime_checker import is_uptime_greater_than_threshold
@@ -127,12 +128,17 @@ def send_auth_route():
     return send_auth()
 
 
-# @app.route('/watcher', methods=['GET'])
-# def send_auth_route():
-#     """Manage led and buzzer."""
-#     return watcher()
+@app.route('/inform_supervisor', methods=['GET'])
+def inform_supervisor_route():
+    """will send message to supervisor"""
+    return inform_supervisor()
 
-app.add_url_rule('/watcher', 'watcher', watcher)
+@app.route('/watcher', methods=['GET'])
+def watcher_route():
+    """Manage led and buzzer."""
+    return watcher()
+
+# app.add_url_rule('/watcher', 'watcher', watcher)
 
 @app.route('/inspect', methods=['GET'])
 def inspect():

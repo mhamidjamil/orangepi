@@ -11,6 +11,7 @@ from pyngrok import ngrok
 from dotenv import load_dotenv
 import serial
 import requests
+from flask import jsonify
 from .communication.ntfy import send_warning, send_error, send_info #pylint: disable=relative-beyond-top-level
 
 load_dotenv()
@@ -323,11 +324,11 @@ def update_time():
         current_time = fetch_current_time_online()
         if current_time:
             print(f"Current time in Karachi: {current_time}")
-            send_to_serial_port(str("py_time:" + current_time + "+20"))
+            send_to_serial_port(f"py_time:{current_time}+20")
         else:
             print("Failed to fetch current time.")
     except Exception as e: # pylint: disable=broad-except
-        exception_logger("update_time", e)
+        exception_logger(f"update_time, time function got: {current_time}", e)
 
 def stop_ngrok():
     """Need to kill NGROK if it is already running"""
@@ -342,6 +343,7 @@ def send_custom_message(message, number):
     try:
         print("Sending custom message request from orange-pi!")
         send_to_serial_port("smsTo [" + message + "]{" + number + "}")
+        # TODO: make sure that message is sent
     except Exception as e: # pylint: disable=broad-except
         exception_logger("send_message", e)
 
@@ -406,3 +408,11 @@ def systemTime():
     """Return system time in the format: %y/%m/%d,%H:%M:%S"""
     return time.strftime("%y/%m/%d,%H:%M:%S")
     
+def inform_supervisor():
+    message = f"Informing supervisor at: {fetch_current_time_online()}"
+    print(message)
+    send_info(message)
+    number = os.getenv("_SUPERVISOR_NUMBER_")
+    message = os.getenv("_KID_NAME_") +" reached flat"
+    send_custom_message(message, number)
+    return jsonify({'result': 'message send successfully'})

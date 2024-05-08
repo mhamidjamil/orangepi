@@ -1,27 +1,43 @@
-# cd /opt/homeassistant/config
-# sudo nano configuration.yml
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
 
 rest_command:
   led_toggle:
-    url: "http://192.168.1.239:6677/watcher?led=toggle"
+    url: "http://192.168.1.238:6677/watcher?led=toggle"
     method: "get"
 
   led_on:
-    url: "http://192.168.1.239:6677/watcher?led=on"
+    url: "http://192.168.1.238:6677/watcher?led=on"
     method: "get"
 
   led_off:
-    url: "http://192.168.1.239:6677/watcher?led=off"
+    url: "http://192.168.1.238:6677/watcher?led=off"
     method: "get"
 
   status:
-    url: "http://192.168.1.239:6677/watcher?status"
+    url: "http://192.168.1.238:6677/watcher?status"
+    method: "get"
+
+  inform_supervisor_enter:
+    url: "http://192.168.1.238:6677/inform_supervisor?state=enter"
+    method: "get"
+
+  inform_supervisor_leave:
+    url: "http://192.168.1.238:6677/inform_supervisor?state=leave"
     method: "get"
 
 sensor:
   - platform: rest
     name: "Status Response"
-    resource: "http://192.168.1.239:6677/watcher?status"
+    resource: "http://192.168.1.238:6677/watcher?status"
     method: GET
     scan_interval: "00:01:00"
     value_template: "{{ value_json.LED }}"

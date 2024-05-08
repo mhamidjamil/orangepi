@@ -11,7 +11,7 @@ from pyngrok import ngrok
 from dotenv import load_dotenv
 import serial
 import requests
-from flask import jsonify
+from flask import jsonify, request
 from .communication.ntfy import send_warning, send_error, send_info #pylint: disable=relative-beyond-top-level
 
 load_dotenv()
@@ -410,9 +410,12 @@ def systemTime():
     
 def inform_supervisor():
     message = f"Informing supervisor at: {fetch_current_time_online()}"
-    print(message)
-    send_info(message)
     number = os.getenv("_SUPERVISOR_NUMBER_")
-    message = os.getenv("_KID_NAME_") +" reached flat"
+    state = request.args.get('state', '')
+    message = os.getenv("_KID_NAME_")
+    message += " leave " if state == "leave" else " enter "
+    message+= f"flat at: {fetch_current_time_online()}"
+    print(f"\n\n\tSending message: {message} to {number}")
+    send_info(f" sending message: {message} to {number}")
     send_custom_message(message, number)
     return jsonify({'result': 'message send successfully'})

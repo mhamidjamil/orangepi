@@ -136,7 +136,8 @@ def beep():
 
 def watcher(): #pylint: disable=too-many-branches
     """Deal with api calls"""
-    send_api_info(f"API called with params: {request.args}")
+    if not 'status' in request.args:
+        send_api_info(f"API called with params: {request.args}")
     variable_value = None
 
     # print(f"API called received with data: {request.args}")

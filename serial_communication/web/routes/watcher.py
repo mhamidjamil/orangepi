@@ -5,7 +5,7 @@ import threading
 import serial
 import serial.tools.list_ports
 from flask import jsonify, request
-from .communication.ntfy import send_warning, send_error, send_info #pylint: disable=relative-beyond-top-level
+from .communication.ntfy import send_warning, send_error, send_info, send_api_info #pylint: disable=relative-beyond-top-level
 from .serial_handler import exception_logger #pylint: disable=relative-beyond-top-level
 
 SERIAL_PORT = None
@@ -136,7 +136,7 @@ def beep():
 
 def watcher(): #pylint: disable=too-many-branches
     """Deal with api calls"""
-    send_info(f"API called with params: {request.args}")
+    send_api_info(f"API called with params: {request.args}")
     variable_value = None
 
     # print(f"API called received with data: {request.args}")

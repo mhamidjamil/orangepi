@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 import serial
 import requests
 from flask import jsonify, request
-from .communication.ntfy import send_warning, send_error, send_info #pylint: disable=relative-beyond-top-level
+from .communication.ntfy import send_warning, send_error, send_info, send_api_info #pylint: disable=relative-beyond-top-level
 
 load_dotenv()
 CURRENT_NGROK_LINK = None
@@ -415,7 +415,9 @@ def inform_supervisor():
     message = os.getenv("_KID_NAME_")
     message += " leave " if state == "leave" else " enter "
     message+= f"flat at: {fetch_current_time_online()}"
+
     print(f"\n\n\tSending message: {message} to {number}")
-    send_info(f" sending message: {message} to {number}")
+    send_api_info(f"Sending custom message: {message} to {number}")
+
     send_custom_message(message, number)
     return jsonify({'result': 'message send successfully'})

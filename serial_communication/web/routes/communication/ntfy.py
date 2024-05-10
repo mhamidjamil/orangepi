@@ -17,7 +17,7 @@ logging.basicConfig(filename=file, level=logging.INFO)
 
 NTFY_URL = os.getenv("_NTFY_URL_")
 
-def send_to_android(endpoint, message):
+def send_to_ntfy(endpoint, message):
     """Function to send data to Android using specified endpoint"""
     if not SAVE_LOGS:
         return
@@ -37,17 +37,22 @@ def send_to_android(endpoint, message):
 
 def send_info(message):
     """to send muted infos"""
-    send_to_android("infos", message)
+    send_to_ntfy("infos", message)
+    log_message("info", message)
+
+def send_api_info(message):
+    """to send information about APIs"""
+    send_to_ntfy("api_infos", message)
     log_message("info", message)
 
 def send_warning(message):
     """to send warnings"""
-    send_to_android("warnings", message)
+    send_to_ntfy("warnings", message)
     log_message("warning", message)
 
 def send_error(message):
     """to send errors"""
-    send_to_android("errors", message)
+    send_to_ntfy("errors", message)
     log_message("error", "\n" + message + "\n")
 
 def log_message(level, msg):

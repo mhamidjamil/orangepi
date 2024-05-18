@@ -71,6 +71,45 @@ volumes:
   netdatacache:
 ```
 
+# Jellyfin setup:
+
+## This setup will use the external HDD
+
+- To see attached external devices type this in terminal:  `lsblk` 
+- Spot your drive like in my case it is sdb1 under sdb
+- You need to create a mount point: `sudo mkdir -p /mnt/external`
+- Mount the drive manually `sudo mount /dev/sda1 /mnt/external`
+- Verify it `ls /mnt/external` it should show the data of hdd
+- Now get the UUID of HDD `sudo blkid /dev/sda1`
+- Edit fstab: `sudo nano /etc/fstab`
+ - After adjusting add this line to the file `UUID=1234-5678-90AB-CDEF /mnt/external ntfs defaults 0 2` 
+ - Save file and type `sudo mount -a`  
+
+#### Create new folders for config and cache (in my case):
+- /home/orangepi/Desktop/temp/jellyfin/config
+- /home/orangepi/Desktop/temp/jellyfin/cache
+
+#### Add this to docker compose file:
+
+```
+version: "3.8"
+services:
+  jellyfin:
+    image: jellyfin/jellyfin
+    container_name: jellyfin
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - /mnt/external:/media
+      - /home/orangepi/Desktop/temp/jellyfin/config:/config
+      - /home/orangepi/Desktop/temp/jellyfin/cache:/cache
+    environment:
+      - UID=1000
+      - GID=1000
+```
+- For permission issue: `sudo chown -R 1000:1000 /mnt/external`
+- To restart jellyfin docker: `sudo docker-compose restart jellyfin`
+
 
 # Odoo setup
 

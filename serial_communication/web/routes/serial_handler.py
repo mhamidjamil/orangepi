@@ -323,11 +323,18 @@ def update_time():
     try:
         current_time = fetch_current_time_online()
         if current_time:
+            # Ensure current_time is a string
+            if not isinstance(current_time, str):
+                raise TypeError(f"Expected current_time to be str, but got {type(current_time).__name__}")
             print(f"Current time in Karachi: {current_time}")
-            send_to_serial_port(f"py_time:{current_time}+20")
+            # Ensure concatenation results in a valid string
+            message = f"py_time:{current_time}+20"
+            if not isinstance(message, str):
+                raise TypeError(f"Expected message to be str, but got {type(message).__name__}")
+            send_to_serial_port(message)
         else:
             print("Failed to fetch current time.")
-    except Exception as e: # pylint: disable=broad-except
+    except Exception as e:  # pylint: disable=broad-except
         exception_logger(f"update_time, time function got: {current_time}", e)
 
 def stop_ngrok():

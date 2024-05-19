@@ -110,6 +110,37 @@ services:
 - For permission issue: `sudo chown -R 1000:1000 /mnt/external`
 - To restart jellyfin docker: `sudo docker-compose restart jellyfin`
 
+# How to setup grafana:
+
+```
+sudo apt update
+sudo apt upgrade -y
+sudo apt install -y apt-transport-https gnupg2 curl
+curl https://packages.grafana.com/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/grafana-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/grafana-archive-keyring.gpg] https://packages.grafana.com/oss/deb stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
+sudo apt update
+sudo apt install -y grafana
+sudo systemctl start grafana-server
+sudo systemctl enable grafana-server
+```
+
+# How to setup Influxdb:
+
+```
+services:
+  influxdb:
+    image: influxdb:latest
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb-data:/var/lib/influxdb
+    restart: always
+
+volumes:
+  influxdb-data:
+```
+
 
 # Odoo setup
 

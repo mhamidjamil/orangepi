@@ -11,8 +11,9 @@ from dotenv import load_dotenv
 DOTENV_PATH = '/home/orangepi/Desktop/projects/orangepi/serial_communication/web/.env'
 load_dotenv(DOTENV_PATH)
 SAVE_LOGS = True
+LOGGER_FILE_NAME = "default_logger.txt"
 
-file = os.getenv("DEFAULT_LOGGER")
+file = os.getenv("LOG_FILE_PATH")+"/"+LOGGER_FILE_NAME
 logging.basicConfig(filename=file, level=logging.INFO)
 
 NTFY_URL = os.getenv("_NTFY_URL_")

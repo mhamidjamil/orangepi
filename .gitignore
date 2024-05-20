@@ -53,3 +53,6 @@ serial_communication/web/.env
 *logs.txt
 *.pyc
 *logger.txt
+
+# might remove this
+__init__.py

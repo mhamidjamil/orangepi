@@ -2,6 +2,7 @@
 # pylint: disable=import-error, no-name-in-module
 import time
 import sys
+import os
 import random
 import multiprocessing
 import threading
@@ -19,8 +20,22 @@ from routes.serial_handler import (
 )
 from routes.route import send_auth
 from routes.uptime_checker import is_uptime_greater_than_threshold
-from routes.communication.ntfy import send_warning, send_info
+from routes.communication.ntfy import send_warning, send_info, temperature_alert
 from routes.watcher import initialize_port, blink, update_serial_port, watcher
+import influxdb_client, os, time
+from influxdb_client import InfluxDBClient, Point, WritePrecision
+from influxdb_client.client.write_api import SYNCHRONOUS
+from dotenv import load_dotenv
+import random
+BUCKET=os.getenv("INFLUXDB_BUCKET")
+ORGANIZATION = os.getenv("INFLUXDB_ORGANIZATION")
+DOTENV_PATH = '/home/orangepi/Desktop/projects/orangepi/serial_communication/web/.env'
+load_dotenv(DOTENV_PATH)
+
+token = os.getenv("INFLUXDB_TOKEN")
+url = os.getenv("LOCALHOST")+":"+os.getenv("INFLUXDB_PORT")
+write_client = influxdb_client.InfluxDBClient(url=url, token=token, org=ORGANIZATION)
+MAX_TEMPERATURE=os.getenv("MAX_TEMPERATURE")
 
 BG_TASK = True
 BOOT_MESSAGE_SEND = False
@@ -208,8 +223,47 @@ def initialize_port_in_thread():
     t1.start()
     while t1.is_alive():
         time.sleep(1)
-
     # t.join()  # Wait for the thread to finish
+
+def monitor_temperature():
+    while True:
+        try:
+            temperatures = []
+
+            # Loop through all thermal zones and fetch temperature values
+            for zone in range(0, 10):  # Assuming thermal zones are numbered from 0 to 9
+                zone_path = f"/sys/class/thermal/thermal_zone{zone}"
+
+                # Check if the thermal zone exists
+                if os.path.exists(zone_path):
+                    with open(os.path.join(zone_path, 'temp'), 'r') as file:
+                        # Convert temperature to an integer
+                        temp = int(file.read().strip())
+                        temperatures.append(temp)
+
+            if temperatures:
+                write_api = write_client.write_api(write_options=SYNCHRONOUS)
+                # Calculate average and maximum temperature values
+                average_temp = sum(temperatures) / len(temperatures) / 1000
+                max_temp = max(temperatures) / 1000
+
+                # Create the point to write to InfluxDB
+                point = (
+                    Point("temperature")
+                    .tag("source", "thermal_zones")
+                    .field("average_temp", average_temp)
+                    .field("max_temp", max_temp)
+                )
+                write_api.write(bucket=BUCKET, org=ORGANIZATION, record=point)
+                print(f"Written to InfluxDB: avg_temp={average_temp}, max_temp={max_temp}")
+                if int(max_temp) > int(MAX_TEMPERATURE):
+                    temperature_alert(f"CPU temperature: {max_temp}")
+            else:
+                print("No valid temperature values found.")
+
+            time.sleep(3)  # Wait for 3 seconds before the next reading
+        except Exception as e: # pylint: disable=broad-except
+            exception_logger("monitor_temperature", e)
 
 if __name__ == '__main__':
     try:
@@ -240,9 +294,11 @@ if __name__ == '__main__':
 
         thread = threading.Thread(target=update_schedule)
         thread2 = threading.Thread(target=one_time_task)
+        thread3 = threading.Thread(target=monitor_temperature)
         send_info("app started")
         thread.start()
         thread2.start()
+        thread3.start()
         app.run(host='0.0.0.0', port=6677, debug=False) #don't move above thread work
 
     except Exception as m: # pylint: disable=broad-except

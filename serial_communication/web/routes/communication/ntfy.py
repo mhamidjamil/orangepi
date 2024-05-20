@@ -54,7 +54,12 @@ def send_warning(message):
 def send_error(message):
     """to send errors"""
     send_to_ntfy("errors", message)
-    log_message("error", "\n" + message + "\n")
+    log_message("critical", "\n!!!" + message + " !!!\n")
+
+def temperature_alert(message):
+    """to send over_heat"""
+    send_to_ntfy("over_heat", message)
+    log_message("critical", "\n!!!" + message + "!!!\n")
 
 def log_message(level, msg):
     """Log a message with the specified log level."""
@@ -66,6 +71,8 @@ def log_message(level, msg):
         logging.warning(msg)
     elif level == 'error':
         logging.error(msg)
+    elif level == 'critical':
+        logging.critical(msg)
     else:
         raise ValueError(f"Invalid log level: {level}")
 

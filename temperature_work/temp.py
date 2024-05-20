@@ -1,6 +1,5 @@
 import os
 
-
 def fetch_temperatures():
     temperatures = []
 
@@ -21,8 +20,8 @@ def fetch_temperatures():
 def display_temperature_stats(temperatures):
     if temperatures:
         # Calculate average and maximum temperature values
-        average_temp = sum(temperatures) / len(temperatures)
-        max_temp = max(temperatures)
+        average_temp = sum(temperatures) / len(temperatures) / 1000
+        max_temp = max(temperatures) / 1000
 
         # Print individual temperature values
         print(f"Temperature values: {temperatures}")

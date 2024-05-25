@@ -13,9 +13,10 @@ from(bucket: "orangepi")
 ## Query for CPU temperatures:
 ```
 from(bucket: "orangepi")
-  |> range(start: -1h)  // Adjust the time range as needed
+  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
   |> filter(fn: (r) => r._measurement == "temperature")
   |> filter(fn: (r) => r._field == "average_temp" or r._field == "max_temp")
+  |> aggregateWindow(every: 2m, fn: mean)
   |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
   |> keep(columns: ["_time", "average_temp", "max_temp"])
 ```
@@ -23,7 +24,7 @@ from(bucket: "orangepi")
 ## Query for room temperature and humidity:
 ```
 from(bucket: "orangepi")
-  |> range(start: -1h)
+  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
   |> filter(fn: (r) => r._measurement == "environment")
   |> filter(fn: (r) => r._field == "temperature" or r._field == "humidity")
   |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")

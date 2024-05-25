@@ -169,8 +169,8 @@ def inspect():
         return response_data
 
 if BG_TASK:
-    schedule.every(2).minutes.do(update_time)
-    schedule.every(5).minutes.do(update_namaz_time)
+    schedule.every(1 if TESTING_ENVIRONMENT else 3).minutes.do(update_time)
+    schedule.every(1 if TESTING_ENVIRONMENT else 5).minutes.do(update_namaz_time)
     # schedule.every(30).minutes.do(sync_company_numbers)
 
 def update_schedule():

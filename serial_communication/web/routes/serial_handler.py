@@ -119,13 +119,15 @@ def update_namaz_time():
 
         # Fetch the current time online
         try:
-            response = requests.get(
-                'http://worldtimeapi.org/api/timezone/Asia/Karachi', timeout=10)
-            # FIXME: We dont have to use this bad approach here 
-            data = response.json()
-            current_time = datetime.datetime.fromisoformat(data['datetime'])
-            current_time = current_time.strftime("%I:%M %p")
-            # return "10:00 AM"
+            if not USE_MODULE_TIME:
+                response = requests.get(
+                    'http://worldtimeapi.org/api/timezone/Asia/Karachi', timeout=10)
+                data = response.json()
+                current_time = datetime.datetime.fromisoformat(data['datetime'])
+                current_time = current_time.strftime("%I:%M %p")
+                # return "10:00 AM"
+            else:
+                current_time = time.strftime("%I:%M %p")
         except requests.exceptions.RequestException as e:
             exception_logger("part_of_update_namaz_time", e)
             return None
@@ -272,7 +274,8 @@ def process_untrained_message(message, sender_number):
 
 def fetch_current_time_online():
     # TODO: need to separate this part from py_time # pylint: disable=fixme
-    """Return current time after fetching from online source for TTGO-TCall"""
+    """Return current time after fetching from online source if required 
+        other wise it will send local time for TTGO-TCall"""
     try:
         global USE_MODULE_TIME # pylint: disable=global-statement
         if not USE_MODULE_TIME:
@@ -428,3 +431,6 @@ def inform_supervisor():
 
     send_custom_message(message, number)
     return jsonify({'result': 'message send successfully'})
+
+# if __name__ == '__main__':
+#     update_namaz_time()

@@ -1,17 +1,16 @@
 # cd /opt/homeassistant/config
 # sudo nano automations.ymlx
-- id: led_on_sunset
-  alias: LED ON on sunset and every 10 minutes after
-  trigger:
+alias: LED ON on sunset and every 10 minutes after
+trigger:
   - platform: sun
     event: sunset
   - platform: time_pattern
     minutes: /10
-  condition:
+condition:
   - condition: sun
     before: sunrise
     after: sunset
-  action:
+action:
   - service: rest_command.status
     data: {}
   - delay:
@@ -20,22 +19,26 @@
       seconds: 5
       milliseconds: 0
   - choose:
-    - conditions:
-      - condition: template
-        value_template: '{{ is_state(''sensor.status_response'', ''False'') }}'
-      sequence:
-      - service: rest_command.led_on
-        data: {}
-    - conditions:
-      - condition: template
-        value_template: '{{ not is_state(''sensor.status_response'', ''False'') and
-          not is_state(''sensor.status_response'', ''True'') }}'
-      sequence:
-      - service: logbook.log
-        data:
-          name: LED Status
-          message: 'Unknown LED status on sunset: {{ states(''sensor.status_response'')
-            }}'
+      - conditions:
+          - condition: template
+            value_template: "{{ is_state('sensor.status_response', 'False') }}"
+        sequence:
+          - service: rest_command.led_on
+            data: {}
+      - conditions:
+          - condition: template
+            value_template: >-
+              {{ not is_state('sensor.status_response', 'False') and not
+              is_state('sensor.status_response', 'True') }}
+        sequence:
+          - service: logbook.log
+            data:
+              name: LED Status
+              message: >-
+                Unknown LED status on sunset: {{
+                states('sensor.status_response') }}
+
+
 - id: '1711304724084'
   alias: led off on sunrise
   description: led will power off on sunrise.

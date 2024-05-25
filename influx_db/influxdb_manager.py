@@ -5,7 +5,7 @@ import influxdb_client, os, time
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 from dotenv import load_dotenv
-# from serial_communication.web.routes.communication.ntfy import temperature_alert
+# from serial_communication.web.routes.communication.ntfy import send_critical
 import threading
 
 # ThingSpeak API URLs
@@ -111,7 +111,7 @@ def monitor_temperature():
                 write_api.write(bucket=BUCKET, org=ORGANIZATION, record=point)
                 print(f"Written to InfluxDB: avg_temp={average_temp}, max_temp={max_temp}")
                 if int(max_temp) > int(MAX_TEMPERATURE):
-                    # temperature_alert(f"CPU temperature: {max_temp}")
+                    # send_critical(f"CPU temperature: {max_temp}")
                     print("Over heat alert!")
             else:
                 print("No valid temperature values found.")

@@ -20,7 +20,7 @@ from routes.serial_handler import (
 )
 from routes.route import send_auth
 from routes.uptime_checker import is_uptime_greater_than_threshold
-from routes.communication.ntfy import send_warning, send_info
+from routes.communication.ntfy import send_warning, send_info, send_critical
 from routes.watcher import initialize_port, blink, update_serial_port, watcher
 
 BG_TASK = True
@@ -38,7 +38,7 @@ def get_serial_ports():
             if port.device.startswith('/dev/tty')]
 
 # Replace with the default serial port
-ser = update_serial_port(COMMUNICATION_PORT)
+ser = update_serial_port(TTGO_TCALL_PORT)
 set_serial_object(ser)
 if COMMUNICATION_PORT is None:
     COMMUNICATION_PORT = ser
@@ -81,7 +81,7 @@ def update_port():
 @app.route('/read_serial')
 def read_serial():
     """Read serial data."""
-    global BG_TASK  # pylint: disable=global-statement
+    global BG_TASK, COMMUNICATION_PORT  # pylint: disable=global-statement
     try:
         if ser:
             raw_data = ser.readline()
@@ -96,9 +96,10 @@ def read_serial():
              'data': raw_data.decode('utf-8')})
     except serial.SerialException as rs:
         BG_TASK = False
-        update_serial_port(TTGO_TCALL_PORT)
+        COMMUNICATION_PORT = update_serial_port(TTGO_TCALL_PORT) #assign new port if it change
         BG_TASK = True
-        exception_logger("read_serial SerialException \n\t Restarting server at: "+fetch_current_time_online(), rs)
+        exception_logger("read_serial SerialException \n\t Restarting server at: " + fetch_current_time_online(), rs)
+        send_critical("restarting flask app because of unexpected error")
         restart_flask_server() #FIXME: not a good approach to restart server.
         return jsonify({'result': 'error', 'message': 'Error reading from serial port'})
 
@@ -114,7 +115,11 @@ def send_serial():
     try:
         data_to_send = request.form['data']
         if data_to_send is not None:  # Check if data_to_send is not None
-            send_to_serial_port(data_to_send)
+            # print (f"\n\n\tdata: {COMMUNICATION_PORT} and condition {COMMUNICATION_PORT==TTGO_TCALL_PORT}")
+            if COMMUNICATION_PORT == TTGO_TCALL_PORT:
+                send_to_serial_port(data_to_send)
+            else:
+                ser.write(data_to_send.encode('utf-8'))
             return {'status': 'success'}
         return {'status': 'error', 'message': 'Invalid data'}  # Handle invalid data
     except Exception as ss: # pylint: disable=broad-except

@@ -56,9 +56,12 @@ def send_error(message):
     send_to_ntfy("errors", message)
     log_message("critical", "\n!!!" + message + " !!!\n")
 
-def temperature_alert(message):
+def send_critical(message):
     """to send over_heat"""
-    send_to_ntfy("over_heat", message)
+    if "temperature" in message: 
+        send_to_ntfy("over_heat", message)
+    else:
+        send_to_ntfy("critical_issues", message)
     log_message("critical", "\n!!!" + message + "!!!\n")
 
 def log_message(level, msg):

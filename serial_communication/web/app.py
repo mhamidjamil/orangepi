@@ -27,7 +27,7 @@ BG_TASK = True
 BOOT_MESSAGE_SEND = False
 TESTING_ENVIRONMENT = False
 TTGO_TCALL_PORT = "/dev/ttyACM"
-COMMUNICATION_PORT = None
+COMMUNICATION_PORT = TTGO_TCALL_PORT
 
 app = Flask(__name__)
 
@@ -38,7 +38,7 @@ def get_serial_ports():
             if port.device.startswith('/dev/tty')]
 
 # Replace with the default serial port
-ser = update_serial_port(TTGO_TCALL_PORT)
+ser = update_serial_port(COMMUNICATION_PORT)
 set_serial_object(ser)
 if COMMUNICATION_PORT is None:
     COMMUNICATION_PORT = ser
@@ -195,7 +195,6 @@ def one_time_task():
         exception_logger("one_time_task", ott)
 
 def initialize_port_in_thread():
-    return
     """This will initialize Watcher in separate thread"""
     t1 = threading.Thread(target=initialize_port)
     t1.start()

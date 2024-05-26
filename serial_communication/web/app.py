@@ -103,9 +103,23 @@ def read_serial():
         restart_flask_server() #FIXME: not a good approach to restart server.
         return jsonify({'result': 'error', 'message': 'Error reading from serial port'})
 
+@app.route('/clear_serial_data', methods=['POST'])
+def clear_serial_data_route():
+    """Clear serial data."""
+    try:
+        if ser:
+            ser.flushInput()  # Clear the input buffer
+            reply = 'Serial data cleared'
+        else:
+            reply = 'ser not found'
+        return jsonify({'status': 'success', 'message': reply})
+    except Exception as e:
+        exception_logger("clear_serial_data", e)
+        return jsonify({'status': 'error', 'message': 'Error clearing serial data'})
+
 def restart_flask_server():
     # Replace 'python app.py' with the command to start your Flask server
-    command = 'python app.py'
+    command = 'python3 app.py'
     process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     _, _ = process.communicate()  # Wait for the process to finish
 
@@ -168,9 +182,10 @@ def inspect():
         }
         return response_data
 
-if BG_TASK:
-    schedule.every(1 if TESTING_ENVIRONMENT else 3).minutes.do(update_time)
-    schedule.every(1 if TESTING_ENVIRONMENT else 5).minutes.do(update_namaz_time)
+def bg_tasks():
+    if BG_TASK:
+        schedule.every(2 if TESTING_ENVIRONMENT else 3).minutes.do(update_time)
+        schedule.every(1 if TESTING_ENVIRONMENT else 5).minutes.do(update_namaz_time)
     # schedule.every(30).minutes.do(sync_company_numbers)
 
 def update_schedule():
@@ -241,9 +256,11 @@ if __name__ == '__main__':
 
         thread = threading.Thread(target=update_schedule)
         thread2 = threading.Thread(target=one_time_task)
+        thread3 = threading.Thread(target=bg_tasks)
         send_info("app started")
         thread.start()
         thread2.start()
+        thread3.start()
         app.run(host='0.0.0.0', port=6677, debug=False) #don't move above thread work
 
     except Exception as m: # pylint: disable=broad-except

@@ -99,7 +99,17 @@
 
         // JavaScript for clearing serial data
         document.getElementById('clear-button').addEventListener('click', function () {
-            document.getElementById('serial-data').innerText = ''; // Clear serial data
+            fetch('/clear_serial_data', {
+                method: 'POST'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Serial data cleared:', data);
+                    document.getElementById('serial-data').innerText = ''; // Clear serial data
+                })
+                .catch(error => {
+                    console.error('Error clearing serial data:', error);
+                });
         });
 
         document.getElementById('port-select').addEventListener('change', function (event) {

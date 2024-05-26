@@ -99,7 +99,7 @@ def read_serial():
         COMMUNICATION_PORT = update_serial_port(TTGO_TCALL_PORT) #assign new port if it change
         BG_TASK = True
         exception_logger("read_serial SerialException \n\t Restarting server at: " + fetch_current_time_online(), rs)
-        send_critical("restarting flask app because of unexpected error")
+        send_critical("restarting flask app because of unexpected error:"+rs)
         restart_flask_server() #FIXME: not a good approach to restart server.
         return jsonify({'result': 'error', 'message': 'Error reading from serial port'})
 

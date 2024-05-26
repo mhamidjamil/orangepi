@@ -6,16 +6,16 @@ from .communication.ntfy import send_api_info #pylint: disable=relative-beyond-t
 
 
 def send_auth():
-    """send auth message to phone number"""
+    """Send authentication message."""
     phone_number = request.args.get('phone_number', '')
+    otp = request.args.get('otp', '')
+
+    OTP_code = otp if otp else str(random.randint(100000, 999999))
+
     print(f"Received phone number: {phone_number}")
+    print(f"Generated OTP code: {OTP_code}")
 
-    random_number = random.randint(100000, 999999)
-    print(f"Generated random number: {random_number}")
-
-    OTP_code = str(random_number)
     send_api_info(f"send_auth is called for number: {phone_number} sending OTP: {OTP_code}")
-    send_custom_message("Your 2FA pin is: " + OTP_code +
-        " don't share it with any one ;)", phone_number)
+    send_custom_message("Your 2FA pin is: " + OTP_code + " don't share it with anyone ;)", phone_number)
 
-    return jsonify({'result': 'Function alfa executed successfully', '2FA pin': random_number})
+    return jsonify({'status': 'success', 'message': f"OTP [{OTP_code}] sent successfully"})

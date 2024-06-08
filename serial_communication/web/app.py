@@ -18,7 +18,7 @@ from routes.serial_handler import (
     sync_company_numbers, fetch_current_time_online,
     send_to_serial_port, inform_supervisor
 )
-from routes.route import send_auth
+from routes.route import send_auth, restart_jellyfin
 from routes.uptime_checker import is_uptime_greater_than_threshold
 from routes.communication.ntfy import send_warning, send_info, send_critical
 from routes.watcher import initialize_port, blink, update_serial_port, watcher
@@ -31,17 +31,21 @@ COMMUNICATION_PORT = TTGO_TCALL_PORT
 
 app = Flask(__name__)
 
+
 def get_serial_ports():
     """Return a list of available serial ports."""
     return [{'port': port.device, 'baud_rate': 115200}
             for port in serial.tools.list_ports.comports()
             if port.device.startswith('/dev/tty')]
 
+
 # Replace with the default serial port
 ser = update_serial_port(TTGO_TCALL_PORT)
 set_serial_object(ser)
 if COMMUNICATION_PORT is None:
     COMMUNICATION_PORT = ser
+
+
 # ser = serial.Serial('/dev/ttyUSB0', 115200)
 
 @app.route('/')
@@ -56,8 +60,9 @@ def index():
                                available_ports=available_ports)
     print("\n\n\t\t !!!___Sending default to index.html___!!!")
     return render_template('index.html',
-                            default_port=ser,
-                            available_ports=available_ports)
+                           default_port=ser,
+                           available_ports=available_ports)
+
 
 @app.route('/update_port', methods=['POST'])
 def update_port():
@@ -66,7 +71,7 @@ def update_port():
         selected_port = request.get_json().get('port')
         if selected_port is not None:
             print("Trying to change to: " + selected_port)
-            global ser, COMMUNICATION_PORT # pylint: disable=global-statement
+            global ser, COMMUNICATION_PORT  # pylint: disable=global-statement
             ser = serial.Serial(selected_port, 115200)
             COMMUNICATION_PORT = ser
             print("\n\n\t\t### Port updated successfully ###")
@@ -74,9 +79,10 @@ def update_port():
 
         print("No port provided in the request.")
         return jsonify({'status': 'error', 'message': 'No port provided'})
-    except Exception as e: # pylint: disable=broad-except
+    except Exception as e:  # pylint: disable=broad-except
         print("Error updating port:", e)
         return jsonify({'status': 'error', 'message': 'Error updating port'})
+
 
 @app.route('/read_serial')
 def read_serial():
@@ -93,15 +99,16 @@ def read_serial():
         exception_logger("read_serial UnicodeDecodeError", ud)
         print(f"Problematic data: {raw_data}")
         return jsonify({'result': 'error', 'message': 'UnicodeDecodeError',
-             'data': raw_data.decode('utf-8')})
+                        'data': raw_data.decode('utf-8')})
     except serial.SerialException as rs:
         BG_TASK = False
-        COMMUNICATION_PORT = update_serial_port(TTGO_TCALL_PORT) #assign new port if it change
+        COMMUNICATION_PORT = update_serial_port(TTGO_TCALL_PORT)  #assign new port if it change
         BG_TASK = True
         exception_logger("read_serial SerialException \n\t Restarting server at: " + fetch_current_time_online(), rs)
-        send_critical("restarting flask app because of unexpected error:"+rs)
-        restart_flask_server() #FIXME: not a good approach to restart server.
+        send_critical("restarting flask app because of unexpected error:" + rs)
+        restart_flask_server()  #FIXME: not a good approach to restart server.
         return jsonify({'result': 'error', 'message': 'Error reading from serial port'})
+
 
 @app.route('/clear_serial_data', methods=['POST'])
 def clear_serial_data_route():
@@ -117,11 +124,13 @@ def clear_serial_data_route():
         exception_logger("clear_serial_data", e)
         return jsonify({'status': 'error', 'message': 'Error clearing serial data'})
 
+
 def restart_flask_server():
     # Replace 'python app.py' with the command to start your Flask server
     command = 'python3 app.py'
     process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     _, _ = process.communicate()  # Wait for the process to finish
+
 
 @app.route('/send_serial', methods=['POST'])
 def send_serial():
@@ -136,24 +145,34 @@ def send_serial():
                 ser.write(data_to_send.encode('utf-8'))
             return {'status': 'success'}
         return {'status': 'error', 'message': 'Invalid data'}  # Handle invalid data
-    except Exception as ss: # pylint: disable=broad-except
+    except Exception as ss:  # pylint: disable=broad-except
         exception_logger("send_serial", ss)
         return {'status': 'error', 'message': str(ss)}  # Return error response
+
 
 @app.route('/send_auth', methods=['GET'])
 def send_auth_route():
     """Send authentication."""
     return send_auth()
 
+
+@app.route('/restart_jellyfin', methods=['GET'])
+def restart_jellyfin_service():
+    """restart jellyfin."""
+    return restart_jellyfin()
+
+
 @app.route('/inform_supervisor', methods=['GET'])
 def inform_supervisor_route():
     """will send message to supervisor"""
     return inform_supervisor()
 
+
 @app.route('/watcher', methods=['GET'])
 def watcher_route():
     """Manage led and buzzer."""
     return watcher()
+
 
 # app.add_url_rule('/watcher', 'watcher', watcher)
 
@@ -182,11 +201,13 @@ def inspect():
         }
         return response_data
 
+
 def bg_tasks():
     if BG_TASK:
         schedule.every(2 if TESTING_ENVIRONMENT else 3).minutes.do(update_time)
         schedule.every(1 if TESTING_ENVIRONMENT else 5).minutes.do(update_namaz_time)
     # schedule.every(30).minutes.do(sync_company_numbers)
+
 
 def update_schedule():
     """Update the schedule."""
@@ -194,10 +215,11 @@ def update_schedule():
         schedule.run_pending()
         time.sleep(10)
 
+
 def one_time_task():
     """Execute one-time tasks."""
     try:
-        global BOOT_MESSAGE_SEND # pylint: disable=global-statement
+        global BOOT_MESSAGE_SEND  # pylint: disable=global-statement
         update_time()
         if not is_ngrok_link_sent():
             time.sleep(10)
@@ -205,14 +227,15 @@ def one_time_task():
                 if not BOOT_MESSAGE_SEND:
                     update_namaz_time()
                     send_message("Script just started boot code: " +
-                        str(random.randint(10000, 99999)))
+                                 str(random.randint(10000, 99999)))
                     BOOT_MESSAGE_SEND = True
                 time.sleep(5)
                 say_to_serial("sms sending?")
                 time.sleep(15)
                 send_ngrok_link()
-    except Exception as ott: # pylint: disable=broad-except
+    except Exception as ott:  # pylint: disable=broad-except
         exception_logger("one_time_task", ott)
+
 
 def initialize_port_in_thread():
     """This will initialize Watcher in separate thread"""
@@ -221,11 +244,12 @@ def initialize_port_in_thread():
     while t1.is_alive():
         time.sleep(1)
 
-    t1 = threading.Thread(target=blink, args=(5,100))
+    t1 = threading.Thread(target=blink, args=(5, 100))
     t1.start()
     while t1.is_alive():
         time.sleep(1)
     # t.join()  # Wait for the thread to finish
+
 
 if __name__ == '__main__':
     try:
@@ -234,7 +258,7 @@ if __name__ == '__main__':
         print(f"Main script last run time: {fetch_current_time_online()}")
         script_rebooted = is_uptime_greater_than_threshold(10)
         send_info(f"\n\nMain script started at: {fetch_current_time_online()} and "
-                 f"{'run manually' if script_rebooted else 'run by service'}")
+                  f"{'run manually' if script_rebooted else 'run by service'}")
 
         if len(sys.argv) > 1:
             # If there are no command-line arguments, assume it's called as a service
@@ -261,7 +285,7 @@ if __name__ == '__main__':
         thread.start()
         thread2.start()
         thread3.start()
-        app.run(host='0.0.0.0', port=6677, debug=False) #don't move above thread work
+        app.run(host='0.0.0.0', port=6677, debug=False)  #don't move above thread work
 
-    except Exception as m: # pylint: disable=broad-except
+    except Exception as m:  # pylint: disable=broad-except
         print(f"Exception in main: {m}")

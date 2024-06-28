@@ -88,6 +88,7 @@ def update_port():
 def read_serial():
     """Read serial data."""
     global BG_TASK, COMMUNICATION_PORT  # pylint: disable=global-statement
+    raw_data = ""
     try:
         if ser:
             raw_data = ser.readline()
@@ -100,12 +101,12 @@ def read_serial():
         print(f"Problematic data: {raw_data}")
         return jsonify({'result': 'error', 'message': 'UnicodeDecodeError',
                         'data': raw_data.decode('utf-8')})
-    except serial.SerialException as rs:
+    except serial.SerialException as e:
         BG_TASK = False
         COMMUNICATION_PORT = update_serial_port(TTGO_TCALL_PORT)  #assign new port if it change
         BG_TASK = True
-        exception_logger("read_serial SerialException \n\t Restarting server at: " + fetch_current_time_online(), rs)
-        send_critical("restarting flask app because of unexpected error:" + rs)
+        exception_logger("read_serial SerialException \n\t Restarting server at: " + fetch_current_time_online(), e)
+        send_critical("restarting flask app because of unexpected error:" + e)
         restart_flask_server()  #FIXME: not a good approach to restart server.
         return jsonify({'result': 'error', 'message': 'Error reading from serial port'})
 

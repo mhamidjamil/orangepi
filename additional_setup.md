@@ -170,3 +170,12 @@ docker run -d \
 
 
 
+### I enable arduino nano with these commands:
+
+```
+sudo apt remove brltty
+
+sudo mv /usr/lib/udev/rules.d/90-brltty-device.rules /usr/lib/udev/rules.d/90-brltty-device.rules.disabled
+sudo mv /usr/lib/udev/rules.d/90-brltty-uinput.rules /usr/lib/udev/rules.d/90-brltty-uinput.rules.disabled
+sudo udevadm control --reload-rules
+```

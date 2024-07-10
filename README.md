@@ -14,7 +14,7 @@ This is a simple web application that allows you to view and interact with seria
    Make sure you have Python, Flask, and PySerial installed.
 
    ```bash
-   pip install Flask pyserial schedule requests beautifulsoup4 pyngrok python-dotenv pygame
+   pip install Flask pyserial schedule requests beautifulsoup4 pyngrok python-dotenv influxdb_client
    ```
 
 2. **Run the App:**

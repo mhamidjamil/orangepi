@@ -80,6 +80,7 @@ def manage_thingspeak():
 
 def monitor_temperature():
     while True:
+        time.sleep(3)  # Wait for 3 seconds before the next reading
         try:
             temperatures = []
 
@@ -114,7 +115,6 @@ def monitor_temperature():
             else:
                 print("No valid temperature values found.")
 
-            time.sleep(3)  # Wait for 3 seconds before the next reading
         except Exception as e:
             print("Unexpected error in function: monitor_temperature", e)
 

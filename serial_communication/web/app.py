@@ -31,7 +31,7 @@ COMMUNICATION_PORT = TTGO_TCALL_PORT
 
 app = Flask(__name__)
 
-
+  
 def get_serial_ports():
     """Return a list of available serial ports."""
     return [{'port': port.device, 'baud_rate': 115200}

@@ -112,6 +112,23 @@ services:
 
 # How to setup grafana:
 
+- To setup with docker compose:
+
+```
+version: '3.0'
+services:
+  grafana:
+    image: grafana/grafana-enterprise
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    volumes:
+      - grafana-storage:/var/lib/grafana
+volumes:
+  grafana-storage: {}
+```
+- To setup with termianl:
 ```
 sudo apt update
 sudo apt upgrade -y

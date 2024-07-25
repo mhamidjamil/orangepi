@@ -1,15 +1,19 @@
-import sys
-sys.path.append('/home/orangepi/Desktop/projects/orangepi/serial_communication/web/routes/communication')
-import os
-import requests
-import time
+"""script to continuously upload CPU and room temperature to local db"""
+# pylint: disable=import-error, no-name-in-module
 from datetime import datetime
+import time
+import os
+import sys
+import threading
+import requests
 from dotenv import load_dotenv
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 from ntfy import send_critical
-import threading
 
+sys.path.append(
+    '/home/orangepi/Desktop/projects/orangepi/serial_communication/web/routes/communication'
+)
 # Load environment variables
 DOTENV_PATH = '/home/orangepi/Desktop/projects/orangepi/serial_communication/web/.env'
 load_dotenv(DOTENV_PATH)
@@ -30,15 +34,17 @@ influx_client = InfluxDBClient(url=INFLUX_URL, token=TOKEN, org=ORGANIZATION)
 write_api = influx_client.write_api(write_options=SYNCHRONOUS)
 
 # Store the last entry ID to check for new data
-last_entry_id = None
+LAST_ENTRY_ID = None
 
 def fetch_thingspeak_data(url):
-    response = requests.get(url)
+    """Use to fetch data from the thingSpeak server."""
+    response = requests.get(url, timeout=10)
     data = response.json()
     feeds = data["feeds"]
     return feeds[0] if feeds else None
 
 def upload_to_influxdb(temperature, humidity):
+    """Use to upload data to influx db server."""
     point = (
         Point("environment")
         .tag("source", "ThingSpeak")
@@ -50,7 +56,8 @@ def upload_to_influxdb(temperature, humidity):
     print(f"Written to InfluxDB: temperature={temperature}, humidity={humidity}")
 
 def manage_thingspeak():
-    global last_entry_id  # pylint: disable=global-statement
+    """Use to fetch data from thingSpeak."""
+    global LAST_ENTRY_ID  # pylint: disable=global-statement
     while True:
         try:
             temp_data = fetch_thingspeak_data(TEMPERATURE_URL)
@@ -61,7 +68,9 @@ def manage_thingspeak():
                 humidity_entry_id = humidity_data["entry_id"]
 
                 # Check if the latest data is new
-                if last_entry_id is None or temp_entry_id > last_entry_id or humidity_entry_id > last_entry_id:
+                if (LAST_ENTRY_ID is None or
+                    temp_entry_id > LAST_ENTRY_ID or
+                    humidity_entry_id > LAST_ENTRY_ID):
                     temperature = float(temp_data["field1"])
                     humidity = float(humidity_data["field2"])
 
@@ -69,7 +78,7 @@ def manage_thingspeak():
                     upload_to_influxdb(temperature, humidity)
 
                     # Update the last entry ID
-                    last_entry_id = max(temp_entry_id, humidity_entry_id)
+                    LAST_ENTRY_ID = max(temp_entry_id, humidity_entry_id)
                 else:
                     print("Skipping ThingSpeak as new value is not added")
 
@@ -79,6 +88,7 @@ def manage_thingspeak():
             print("Unexpected error in function: manage_thingspeak", e)
 
 def monitor_temperature():
+    """Use to monitor CPU temperature."""
     while True:
         time.sleep(3)  # Wait for 3 seconds before the next reading
         try:
@@ -90,7 +100,7 @@ def monitor_temperature():
 
                 # Check if the thermal zone exists
                 if os.path.exists(zone_path):
-                    with open(os.path.join(zone_path, 'temp'), 'r') as file:
+                    with open(os.path.join(zone_path, 'temp'), 'r', encoding='utf-8') as file:
                         # Convert temperature to an integer
                         temp = int(file.read().strip()) / 1000
                         temperatures.append(temp)
@@ -115,7 +125,7 @@ def monitor_temperature():
             else:
                 print("No valid temperature values found.")
 
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-except
             print("Unexpected error in function: monitor_temperature", e)
 
 if __name__ == "__main__":

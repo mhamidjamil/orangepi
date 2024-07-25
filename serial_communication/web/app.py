@@ -2,7 +2,6 @@
 # pylint: disable=import-error, no-name-in-module
 import time
 import sys
-import os
 import random
 import multiprocessing
 import threading
@@ -15,8 +14,7 @@ from routes.serial_handler import (
     set_serial_object, read_serial_data, update_time,
     update_namaz_time, send_ngrok_link, say_to_serial,
     is_ngrok_link_sent, send_message, exception_logger,
-    sync_company_numbers, fetch_current_time_online,
-    send_to_serial_port, inform_supervisor
+    fetch_current_time_online, send_to_serial_port, inform_supervisor
 )
 from routes.route import send_auth, restart_jellyfin
 from routes.uptime_checker import is_uptime_greater_than_threshold
@@ -31,7 +29,7 @@ COMMUNICATION_PORT = TTGO_TCALL_PORT
 
 app = Flask(__name__)
 
-  
+
 def get_serial_ports():
     """Return a list of available serial ports."""
     return [{'port': port.device, 'baud_rate': 115200}
@@ -105,9 +103,11 @@ def read_serial():
         BG_TASK = False
         COMMUNICATION_PORT = update_serial_port(TTGO_TCALL_PORT)  #assign new port if it change
         BG_TASK = True
-        exception_logger("read_serial SerialException \n\t Restarting server at: " + fetch_current_time_online(), e)
+        exception_logger("read_serial SerialException" +
+                         "\n\t Restarting server at: " + fetch_current_time_online(), e)
         send_critical("restarting flask app because of unexpected error:" + e)
-        restart_flask_server()  #FIXME: not a good approach to restart server.
+        restart_flask_server()
+        # FIXME: not a good approach to restart server. # pylint: disable=W0511
         return jsonify({'result': 'error', 'message': 'Error reading from serial port'})
 
 
@@ -121,16 +121,18 @@ def clear_serial_data_route():
         else:
             reply = 'ser not found'
         return jsonify({'status': 'success', 'message': reply})
-    except Exception as e:
+    except Exception as e: # pylint: disable=broad-except
         exception_logger("clear_serial_data", e)
         return jsonify({'status': 'error', 'message': 'Error clearing serial data'})
 
 
 def restart_flask_server():
+    """Use to restart flask server in case is script stuck in looping"""
     # Replace 'python app.py' with the command to start your Flask server
     command = 'python3 app.py'
-    process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    _, _ = process.communicate()  # Wait for the process to finish
+    with subprocess.Popen(command.split(), stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE) as process:
+        _, _ = process.communicate()
 
 
 @app.route('/send_serial', methods=['POST'])
@@ -139,7 +141,8 @@ def send_serial():
     try:
         data_to_send = request.form['data']
         if data_to_send is not None:  # Check if data_to_send is not None
-            # print (f"\n\n\tdata: {COMMUNICATION_PORT} and condition {COMMUNICATION_PORT==TTGO_TCALL_PORT}")
+            # print (f"\n\n\tdata: {COMMUNICATION_PORT}"
+                # f"and condition {COMMUNICATION_PORT==TTGO_TCALL_PORT}")
             if COMMUNICATION_PORT == TTGO_TCALL_PORT:
                 send_to_serial_port(data_to_send)
             else:
@@ -204,6 +207,7 @@ def inspect():
 
 
 def bg_tasks():
+    """Use to run background tasks"""
     if BG_TASK:
         schedule.every(2 if TESTING_ENVIRONMENT else 3).minutes.do(update_time)
         schedule.every(1 if TESTING_ENVIRONMENT else 5).minutes.do(update_namaz_time)

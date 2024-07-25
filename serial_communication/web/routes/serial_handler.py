@@ -283,7 +283,7 @@ def process_untrained_message(message, sender_number):
 
 def fetch_current_time_online():
     # TODO: need to separate this part from py_time # pylint: disable=fixme
-    """Return current time after fetching from online source if required 
+    """Return current time after fetching from online source if required
         other wise it will send local time for TTGO-TCall"""
     try:
         global USE_MODULE_TIME  # pylint: disable=global-statement
@@ -318,7 +318,7 @@ def say_to_serial(serial_data):
         message = str("{hay ttgo-tcall!" + serial_data_str + "}")
         print(f"sending : {message}")
         send_to_serial_port(message)
-    except Exception as e:
+    except Exception as e: # pylint: disable=broad-except
         exception_logger("say_to_serial, data is received: [" + str(serial_data) + "]", e)
 
 
@@ -341,7 +341,8 @@ def update_time():
         if current_time:
             # Ensure current_time is a string
             if not isinstance(current_time, str):
-                raise TypeError(f"Expected current_time to be str, but got {type(current_time).__name__}")
+                raise TypeError("Expected current_time to be str," +
+                                f"but got {type(current_time).__name__}")
             print(f"Current time in Karachi: {current_time}")
             # Ensure concatenation results in a valid string
             message = f"py_time:{current_time}+20"
@@ -368,7 +369,7 @@ def send_custom_message(message, number):
     try:
         print("Sending custom message request from orange-pi!")
         send_to_serial_port("smsTo [" + message + "]{" + number + "}")
-        # TODO: make sure that message is sent
+        # TODO: make sure that message is sent # pylint: disable=fixme
     except Exception as e:  # pylint: disable=broad-except
         exception_logger("send_message", e)
 
@@ -441,6 +442,7 @@ def system_time():
 
 
 def inform_supervisor():
+    """Will send message to required number"""
     message = f"Informing supervisor at: {fetch_current_time_online()}"
     number = os.getenv("_SUPERVISOR_NUMBER_")
     state = request.args.get('state', '')

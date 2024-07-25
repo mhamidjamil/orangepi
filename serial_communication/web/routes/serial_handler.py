@@ -341,9 +341,8 @@ def update_time():
         if current_time:
             # Ensure current_time is a string
             if not isinstance(current_time, str):
-                current_time = str(current_time)  # Convert to string
-                print(f"Warning: Converted current_time to string: {current_time}")
-
+                raise TypeError("Expected current_time to be str," +
+                                f"but got {type(current_time).__name__}")
             print(f"Current time in Karachi: {current_time}")
 
             # Ensure concatenation results in a valid string

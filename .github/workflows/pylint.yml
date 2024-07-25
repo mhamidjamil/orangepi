@@ -28,7 +28,7 @@ jobs:
     - name: Run pylint
       run: |
         pylint **/*.py | tee pylint_output.txt
-        SCORE=$(tail -n 2 pylint_output.txt | head -n 1 | awk '{print $7}')
+        SCORE=$(awk '/Your code has been rated/ {print $7}' pylint_output.txt | tail -n 1)
         if [ "$SCORE" != "10.00" ]; then
           cat pylint_output.txt
           exit 1

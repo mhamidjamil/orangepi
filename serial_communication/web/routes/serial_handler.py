@@ -341,17 +341,22 @@ def update_time():
         if current_time:
             # Ensure current_time is a string
             if not isinstance(current_time, str):
-                raise TypeError("Expected current_time to be str," +
-                                f"but got {type(current_time).__name__}")
+                current_time = str(current_time)  # Convert to string
+                print(f"Warning: Converted current_time to string: {current_time}")
+
             print(f"Current time in Karachi: {current_time}")
+
             # Ensure concatenation results in a valid string
             message = f"py_time:{current_time}+20"
             if not isinstance(message, str):
                 raise TypeError(f"Expected message to be str, but got {type(message).__name__}")
+
             send_to_serial_port(message)
         else:
             print("Failed to fetch current time.")
-    except Exception as e:  # pylint: disable=broad-except
+    except TypeError as e:
+        exception_logger(f"TypeError in update_time, time function got: {current_time}", e)
+    except Exception as e: # pylint: disable=broad-except
         exception_logger(f"update_time, time function got: {current_time}", e)
 
 

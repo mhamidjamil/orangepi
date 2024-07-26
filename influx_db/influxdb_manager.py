@@ -9,7 +9,7 @@ import requests
 from dotenv import load_dotenv
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
-from ntfy import send_critical
+# from ntfy import send_critical
 
 sys.path.append(
     '/home/orangepi/Desktop/projects/orangepi/serial_communication/web/routes/communication'
@@ -120,7 +120,7 @@ def monitor_temperature():
                 write_api.write(bucket=BUCKET, org=ORGANIZATION, record=point)
                 print(f"Written to InfluxDB: avg_temp={average_temp}, max_temp={max_temp}")
                 if max_temp > MAX_TEMPERATURE:
-                    send_critical(f"CPU temperature: {max_temp}")
+                    # send_critical(f"CPU temperature: {max_temp}")
                     print("Over heat alert!")
             else:
                 print("No valid temperature values found.")

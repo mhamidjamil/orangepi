@@ -75,15 +75,24 @@ volumes:
 
 ## This setup will use the external HDD
 
-- To see attached external devices type this in terminal:  `lsblk` 
+- To see attached external devices type this in terminal:  `lsblk`
 - Spot your drive like in my case it is sdb1 under sdb
 - You need to create a mount point: `sudo mkdir -p /mnt/external`
+- In case you get any error like this:
+```
+Mount is denied because the NTFS volume is already exclusively opened.
+The volume may be already mounted, or another software may use it which
+could be identified for example by the help of the 'fuser' command.
+```
+- To solve this error please follow [these](#mounting-issue-solution) commands:
+
 - Mount the drive manually `sudo mount /dev/sda1 /mnt/external`
 - Verify it `ls /mnt/external` it should show the data of hdd
-- Now get the UUID of HDD `sudo blkid /dev/sda1`
+- Now get the UUID of HDD `sudo blkid /dev/sda1` it looks like this: `UUID="01DA837C8C0D34B0"`
 - Edit fstab: `sudo nano /etc/fstab`
- - After adjusting add this line to the file `UUID=1234-5678-90AB-CDEF /mnt/external ntfs defaults 0 2` 
- - Save file and type `sudo mount -a`  
+ - After adjusting add this line to the file `UUID=1234-5678-90AB-CDEF /mnt/external ntfs defaults 0 2`
+ - Save file and type `sudo mount -a`
+ - Please follow [these](#To-share-external-HDD) instruction to share that HDD on local network
 
 #### Create new folders for config and cache (in my case):
 - /home/orangepi/Desktop/temp/jellyfin/config
@@ -128,7 +137,7 @@ services:
 volumes:
   grafana-storage: {}
 ```
-- To setup with termianl:
+- To setup with terminal:
 ```
 sudo apt update
 sudo apt upgrade -y
@@ -187,7 +196,7 @@ docker run -d \
 
 
 
-### I enable arduino nano with these commands:
+### Enable arduino nano with these commands:
 
 ```
 sudo apt remove brltty
@@ -196,3 +205,74 @@ sudo mv /usr/lib/udev/rules.d/90-brltty-device.rules /usr/lib/udev/rules.d/90-br
 sudo mv /usr/lib/udev/rules.d/90-brltty-uinput.rules /usr/lib/udev/rules.d/90-brltty-uinput.rules.disabled
 sudo udevadm control --reload-rules
 ```
+
+# To share external HDD
+
+### Setup Samba to Share `/mnt/external` Directory
+
+Follow these steps to configure Samba for sharing the `/mnt/external` directory on your Linux machine so it can be accessed from other devices on the same network:
+
+### 1. Install Samba
+
+```sh
+sudo apt update
+sudo apt install samba
+```
+
+### 2. Configure Samba
+
+Edit the Samba configuration file:
+
+```sh
+sudo nano /etc/samba/smb.conf
+```
+
+Add the following lines at the end of the file:
+
+```ini
+[External]
+path = /mnt/external
+browsable = yes
+writable = yes
+guest ok = yes
+create mask = 0777
+directory mask = 0777
+```
+
+### 3. Set Directory Permissions
+
+Ensure the directory has the appropriate permissions:
+
+```sh
+sudo chmod -R 0777 /mnt/external
+sudo chown -R nobody:nogroup /mnt/external
+```
+
+### 4. Restart Samba
+
+Restart the Samba service to apply the changes:
+
+```sh
+sudo systemctl restart smbd
+```
+
+### 5. Check Samba Status
+
+Ensure Samba is running without errors:
+
+```sh
+sudo systemctl status smbd
+```
+
+### 6. Access the Share
+
+From a Windows machine, you can access the share by typing `\\linux_ip\External` in the File Explorer's address bar.
+
+Replace `linux_ip` with the IP address of your Linux machine.
+
+## Mounting Issue Solution
+Here are the commands you need to run:
+1. `sudo fuser -v /dev/sda1`
+2. `sudo fuser -k /dev/sda1`
+3. `sudo umount /dev/sda1`
+4. `sudo mount /dev/sda1 /mnt/external`

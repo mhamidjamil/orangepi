@@ -276,3 +276,54 @@ Here are the commands you need to run:
 2. `sudo fuser -k /dev/sda1`
 3. `sudo umount /dev/sda1`
 4. `sudo mount /dev/sda1 /mnt/external`
+
+
+# To setup dashy
+- All the installation guid is present on [this](https://dashy.to/) page.
+- Navigate to required directory `cd /Desktop/projects/`
+- Create folder `mkdir dashy_config`
+- Create config file in created folder `cd dashy_config && sudo nano config.yaml`
+- In dashy past [this](#dashy-config-data) content for now or try using backup.
+- Create folder in dashy `mkdir icons && cd icons`
+- In dashy folder clone [this](https://github.com/walkxcode/dashboard-icons.git) repo: `git clone https://github.com/walkxcode/dashboard-icons.git`
+- Navigate to docker compose file `cd /opt`
+- Edit docker compose file add this service:
+
+```
+services:
+  dashy:
+    image: lissy93/dashy
+    container_name: Dashy
+    ports:
+      - 8080:8080
+    volumes:
+      - /home/orangepi/Desktop/projects/dashy_config/config.yml:/app/public/config.yml
+      - /home/orangepi/Desktop/projects/dashy_config/icons/dashboard-icons/png:/app/public/item-icons/icons
+    restart: unless-stopped
+```
+
+# Dashy config data:
+```
+pageInfo:
+  title: Home Lab
+sections: # An array of sections
+- name: Example Section
+  icon: far fa-rocket
+  items:
+  - title: GitHub
+    description: Dashy source code and docs
+    icon: fab fa-github
+    url: https://github.com/Lissy93/dashy
+  - title: Issues
+    description: View open issues, or raise a new one
+    icon: fas fa-bug
+    url: https://github.com/Lissy93/dashy/issues
+- name: Local Services
+  items:
+  - title: Firewall
+    icon: favicon
+    url: http://192.168.1.1/
+  - title: Game Server
+    icon: https://i.ibb.co/710B3Yc/space-invader-x256.png
+    url: http://192.168.130.1/
+```

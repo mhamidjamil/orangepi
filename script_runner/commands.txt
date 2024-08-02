@@ -1,0 +1,1 @@
+noip-duc -g all.ddnskey.com --username $no_ip_username --password $no_ip_password

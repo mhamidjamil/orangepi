@@ -1,6 +1,7 @@
 import os
 import subprocess
 import logging
+import threading
 from typing import List, Tuple, Union
 
 # Configure logging
@@ -71,11 +72,18 @@ def main():
 
     commands = read_config(config_file_path)
 
+    threads = []
+
     for item in commands:
         if isinstance(item, tuple):
-            run_command(item[0], item[1])
+            thread = threading.Thread(target=run_command, args=(item[0], item[1]))
         else:
-            run_command(None, item)
+            thread = threading.Thread(target=run_command, args=(None, item))
+        threads.append(thread)
+        thread.start()
+
+    for thread in threads:
+        thread.join()
 
 if __name__ == "__main__":
     main()

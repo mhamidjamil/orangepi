@@ -1,2 +1,3 @@
 /home/orangepi/Desktop/projects/simplefolio:npm start
 noip-duc -g all.ddnskey.com --username $no_ip_username --password $no_ip_password
+/home/orangepi/Desktop/projects/airisq-backend:rails s -p 3003 -b 192.168.1.238

@@ -1,3 +1,18 @@
+"""
+This script will load environment variables from a specified .env file and execute a series
+of commands defined in a configuration file.
+
+Each command can be run in a specified directory, and the execution is handled
+concurrently using threads.
+
+Logging is implemented to track the success or failure
+of each command, providing insights into the script's operations.
+
+Usage:
+1. Specify the path to the .env file and the configuration file containing commands.
+2. The script loads the environment variables and executes the commands in parallel.
+3. Logs are generated for monitoring the execution process.
+"""
 import os
 import subprocess
 import logging
@@ -11,7 +26,7 @@ logging.basicConfig(filename='service_runner.log', level=logging.INFO,
 def load_env_file(env_file_path: str):
     """Load environment variables from a .env file."""
     try:
-        with open(env_file_path) as f:
+        with open(env_file_path, encoding='utf-8') as f:
             for line in f:
                 if line.startswith('#') or not line.strip():
                     continue
@@ -20,7 +35,7 @@ def load_env_file(env_file_path: str):
     except FileNotFoundError as e:
         logging.error("Environment file not found: %s", env_file_path)
         logging.exception(e)
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logging.error("An error occurred while loading the environment file.")
         logging.exception(e)
 
@@ -28,7 +43,7 @@ def read_config(file_path: str) -> List[Union[Tuple[str, str], str]]:
     """Read configuration file and return a list of tuples (directory, command) or just commands."""
     commands = []
     try:
-        with open(file_path, 'r') as file:
+        with open(file_path, 'r', encoding='utf-8') as file:
             for line in file:
                 line = line.strip()
                 if line:
@@ -40,7 +55,7 @@ def read_config(file_path: str) -> List[Union[Tuple[str, str], str]]:
     except FileNotFoundError as e:
         logging.error("Configuration file not found: %s", file_path)
         logging.exception(e)
-    except Exception as e:
+    except Exception as e:  # pylint: disable=W0718
         logging.error("An error occurred while reading the configuration file.")
         logging.exception(e)
     return commands
@@ -51,14 +66,15 @@ def run_command(directory: Union[str, None], command: str):
         if directory:
             os.chdir(directory)
         subprocess.run(command, shell=True, check=True, env=os.environ)
-        logging.info("Successfully ran command '%s' in directory '%s'", command, directory if directory else 'current directory')
+        logging.info("Successfully ran command '%s' in directory '%s'",
+                     command, directory if directory else 'current directory')
     except FileNotFoundError as e:
         logging.error("Directory not found: %s", directory)
         logging.exception(e)
     except subprocess.CalledProcessError as e:
         logging.error("Command failed: %s", command)
         logging.exception(e)
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         logging.error("An error occurred while running the command.")
         logging.exception(e)
 

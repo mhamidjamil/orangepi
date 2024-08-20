@@ -12,7 +12,8 @@ CLEAN_UP_TIME = 5
 CAP = None
 LAST_ACCESS_TIME = time.time()
 lock = threading.Lock()
-device_list = ['/dev/video0', '/dev/video1', '/dev/video2', '/dev/video3', '/dev/video4', '/dev/video5']
+device_list = ['/dev/video0', '/dev/video1',
+                '/dev/video2', '/dev/video3', '/dev/video4', '/dev/video5']
 
 def start_camera():
     """Starts the camera capture by trying available video devices."""
@@ -22,9 +23,8 @@ def start_camera():
         if CAP.isOpened():
             print(f"Camera started successfully on {device}")
             return
-        else:
-            print(f"Could not open camera on {device}")
-            CAP = None
+        print(f"Could not open camera on {device}")
+        CAP = None
     print("Error: Could not open any available camera.")
 
 def stop_camera():

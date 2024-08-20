@@ -3,6 +3,7 @@
 
 # sudo nano /etc/systemd/system/serial_monitoring.service
 # sudo nano /etc/systemd/system/influxdb_manager.service
+# sudo nano /etc/systemd/system/script_runner.service
 
 # file data:
 
@@ -13,6 +14,7 @@ After=network.target
 [Service]
 ExecStart=/usr/bin/python3 /home/orangepi/Desktop/projects/orangepi/serial_communication/web/app.py --from-service
 # ExecStart=/usr/bin/python3 /home/orangepi/Desktop/projects/orangepi/influx_db/influxdb_manager.py
+# ExecStart=/usr/bin/python3 /home/orangepi/Desktop/projects/orangepi/script_runner/main.py
 Restart=always
 User=orangepi
 
@@ -25,3 +27,4 @@ WantedBy=default.target
 
 # sudo systemctl enable serial_monitoring.service
 # sudo systemctl enable influxdb_manager.service
+# sudo systemctl enable script_runner.service

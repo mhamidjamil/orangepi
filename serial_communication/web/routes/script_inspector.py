@@ -1,4 +1,4 @@
-"""This script continously ping running scripts to check if they are working well"""
+"""This script continuously ping running scripts to check if they are working well"""
 import time
 import random
 import subprocess
@@ -14,7 +14,7 @@ CHECK_AFTER = 30 #in seconds
 START_AFTER = 650 #in seconds
 
 def check_flask_service():
-    """If our flask service is not orking as expected then it will restart that service"""
+    """If our flask service is not working as expected then it will restart that service"""
     try:
         # Generate a random two-digit number
         random_number = random.randint(10, 99)
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     while True:
         print("\n\n\t loop restarted\n\n")
         send_info("script inspector started")
-        check_flask_service() # you can add more inspectore here
+        check_flask_service() # you can add more inspector here
         current_time = datetime.now()
         formatted_time = current_time.strftime("%H:%M:%S")
         print(f"Last run on: {formatted_time}")

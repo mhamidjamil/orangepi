@@ -261,7 +261,7 @@ if __name__ == '__main__':
         # lsof -i :6677 #to know which process is using this port
         initialize_port_in_thread()
         print(f"Main script last run time: {fetch_current_time_online()}")
-        script_rebooted = is_uptime_greater_than_threshold(10)
+        script_rebooted = is_uptime_greater_than_threshold(5)
         send_info(f"\n\nMain script started at: {fetch_current_time_online()} and "
                   f"{'run manually' if script_rebooted else 'run by service'}")
 
@@ -271,7 +271,7 @@ if __name__ == '__main__':
             if not script_rebooted:
                 print("\n\tHave to wait until system stabilize")
                 send_warning("have to wait until system stabilize")
-                time.sleep(600)
+                time.sleep(300)
             else:
                 print("\n\tSkipping delay as system is stable")
         else:

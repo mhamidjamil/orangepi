@@ -327,3 +327,12 @@ sections: # An array of sections
     icon: https://i.ibb.co/710B3Yc/space-invader-x256.png
     url: http://192.168.130.1/
 ```
+# Steps to configure no-ip
+
+```
+wget --content-disposition https://www.noip.com/download/linux/latest
+sudo tar xf noip-duc_3.1.1.tar.gz
+cd /home/$USER/noip-duc_3.1.1/binaries && sudo apt install ./noip-duc_3.1.1_arm64.deb
+```
+### To run process:
+- `noip-duc -g all.ddnskey.com --username username --password password`

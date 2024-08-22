@@ -1,3 +1,4 @@
+"""This script will mount my router HDD to my orangepi on startup after 5 minutes"""
 import os
 import subprocess
 import time
@@ -25,15 +26,21 @@ def run_smb_mount():
         _ = subprocess.run(f"echo {sudo_password} | sudo -S {smb_mount_command}",
                            shell=True, check=True)
         print("SMB share mounted successfully.")
+
+        # Restart the Docker container
+        docker_restart_command = "docker restart jellyfin"
+        subprocess.run(docker_restart_command, shell=True, check=True)
+        print("Docker container 'jellyfin' restarted successfully.")
+
     except subprocess.CalledProcessError as e:
         print(f"Error: Command failed with exit status {e.returncode}")
     except Exception as e:  # pylint: disable=broad-exception-caught
         print(f"An unexpected error occurred: {e}")
 
 if __name__ == "__main__":
-    i=5
+    i = 5
     while i > 0:
         print (f"\n\n\tWaiting for {i} minutes then mount the drive\n")
-        i-=1
+        i -= 1
         time.sleep(60)
     run_smb_mount()

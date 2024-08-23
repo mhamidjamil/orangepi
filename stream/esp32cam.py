@@ -9,7 +9,8 @@ Dependencies: Flask, OpenCV
 
 import os
 import cv2
-from flask import Flask, Response
+from flask import Flask, Response, request
+from ntfy import send_warning
 
 # Retrieve the ESP32-CAM URL from the Linux environment variable
 esp32_cam_url = os.getenv('ESP32_IP')
@@ -41,9 +42,12 @@ def generate_frames():
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
-@app.route('/')
+@app.route('/stream')
 def video_feed():
     """Video streaming route for the ESP32-CAM feed."""
+    client_ip = request.remote_addr
+    print(f"Request received from IP address: {client_ip}")
+    send_warning(f"Web cam access from IP address: {client_ip}")
     return Response(generate_frames(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 

@@ -1,9 +1,10 @@
-"""Script to broadcast usb camera stream"""
+"""Script to broadcast USB camera stream"""
 import threading
 import atexit
 import time
 import cv2
-from flask import Flask, Response
+from flask import Flask, Response, request
+from ntfy import send_warning
 
 app = Flask(__name__)
 
@@ -13,7 +14,7 @@ CAP = None
 LAST_ACCESS_TIME = time.time()
 lock = threading.Lock()
 device_list = ['/dev/video0', '/dev/video1',
-                '/dev/video2', '/dev/video3', '/dev/video4', '/dev/video5']
+               '/dev/video2', '/dev/video3', '/dev/video4', '/dev/video5']
 
 def start_camera():
     """Starts the camera capture by trying available video devices."""
@@ -69,9 +70,13 @@ def generate_frames():
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
-@app.route('/')
+@app.route('/stream')
 def index():
     """Responsible for stream"""
+    client_ip = request.remote_addr
+    print(f"Request received from IP address: {client_ip}")
+    send_warning(f"Web cam access from IP address: {client_ip}")
+
     return Response(generate_frames(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 

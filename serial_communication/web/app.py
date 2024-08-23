@@ -163,7 +163,6 @@ def send_auth_route():
 @app.route('/send_sms', methods=['GET'])
 def send_custom_sms():
     """Send custom message."""
-    print ("\n\ngot you homie?\n")
     return send_sms()
 
 @app.route('/restart_jellyfin', methods=['GET'])

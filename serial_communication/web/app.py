@@ -16,7 +16,7 @@ from routes.serial_handler import (
     is_ngrok_link_sent, send_message, exception_logger,
     fetch_current_time_online, send_to_serial_port, inform_supervisor
 )
-from routes.route import send_auth, restart_jellyfin
+from routes.route import send_auth, restart_jellyfin, send_sms
 from routes.uptime_checker import is_uptime_greater_than_threshold
 from routes.communication.ntfy import send_warning, send_info, send_critical
 from routes.watcher import initialize_port, blink, update_serial_port, watcher
@@ -160,6 +160,11 @@ def send_auth_route():
     return send_auth()
 
 
+@app.route('/send_sms', methods=['GET'])
+def send_custom_sms():
+    """Send custom message."""
+    return send_sms()
+
 @app.route('/restart_jellyfin', methods=['GET'])
 def restart_jellyfin_service():
     """restart jellyfin."""
@@ -290,7 +295,7 @@ if __name__ == '__main__':
         thread.start()
         thread2.start()
         thread3.start()
-        app.run(host='0.0.0.0', port=6677, debug=False)  #don't move above thread work
+        app.run(host='0.0.0.0', port=6677, debug=False)  #! don't move this line
 
     except Exception as m:  # pylint: disable=broad-except
         print(f"Exception in main: {m}")

@@ -210,6 +210,8 @@ sudo udevadm control --reload-rules
 
 ### Setup Samba to Share `/mnt/external` Directory
 
+Consider looking into [this](#To-share-smb-server-of-router) information as it uses the smb server (HDD mount in router).
+
 Follow these steps to configure Samba for sharing the `/mnt/external` directory on your Linux machine so it can be accessed from other devices on the same network:
 
 ### 1. Install Samba
@@ -335,4 +337,30 @@ sudo tar xf noip-duc_3.1.1.tar.gz
 cd /home/$USER/noip-duc_3.1.1/binaries && sudo apt install ./noip-duc_3.1.1_arm64.deb
 ```
 ### To run process:
-- `noip-duc -g all.ddnskey.com --username username --password password`
+- `noip-duc -g all.ddnskey.com --username $no_ip_username --password $no_ip_password`
+
+## To share smb server of router:
+### Install Required Packages
+
+```
+sudo apt-get update
+sudo apt-get install cifs-utils
+```
+
+### Create a Mount Point
+
+`sudo mkdir -p /mnt/smbshare`
+
+
+### Mount the SMB Share Manually (don't forgot to change the username and password)
+
+`sudo mount -t cifs -o username=$SMB_USERNAME,password=$SMB_PASSWORD,vers=1.0 //192.168.1.1/g /mnt/smbshare`
+
+
+### Auto mount the SMB Share on Boot
+
+`sudo nano /etc/fstab`
+
+### Adds this to end of the file:
+
+`//192.168.1.1/g /mnt/smbshare cifs username=$SMB_USERNAME,password=$SMB_PASSWORD,vers=1.0,iocharset=utf8 0 0`

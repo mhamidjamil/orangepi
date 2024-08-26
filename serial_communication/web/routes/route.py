@@ -28,6 +28,21 @@ def restart_jellyfin():
         return jsonify({'status': 'Fail', 'message': "Error while restarting server"})
 
 
+def send_sms():
+    """Send customized message."""
+    phone_number = request.args.get('phone_number', '')
+    message = request.args.get('message', '')
+
+    final_message = message if message else "Test message as user has not defined message in params"
+
+    print(f"Received phone number: {phone_number}")
+    print(f"Message body: {final_message}")
+
+    send_api_info(f"send_sms is called for number: {phone_number} sending message: {final_message}")
+    send_custom_message(final_message, phone_number)
+
+    return jsonify({'status': 'success', 'message': f"Message sent successfully"})
+
 def send_auth():
     """Send authentication message."""
     phone_number = request.args.get('phone_number', '')

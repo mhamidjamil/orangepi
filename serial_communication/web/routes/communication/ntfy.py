@@ -7,9 +7,9 @@ import os
 from dotenv import load_dotenv
 
 # Specify the path to your .env file
-#FIXME: remove this hardcode address
 DOTENV_PATH = '/home/orangepi/Desktop/projects/orangepi/serial_communication/web/.env'
 load_dotenv(DOTENV_PATH)
+
 SAVE_LOGS = True
 LOGGER_FILE_NAME = "default_logger.txt"
 
@@ -58,7 +58,7 @@ def send_error(message):
 
 def send_critical(message):
     """to send over_heat"""
-    if "temperature" in message: 
+    if "temperature" in message:
         send_to_ntfy("over_heat", message)
     else:
         send_to_ntfy("critical_issues", message)

@@ -47,7 +47,7 @@ def video_feed():
     """Video streaming route for the ESP32-CAM feed."""
     client_ip = request.remote_addr
     print(f"Request received from IP address: {client_ip}")
-    send_warning(f"Web cam access from IP address: {client_ip}")
+    send_warning(f"esp32 cam module access from IP address: {client_ip}")
     return Response(generate_frames(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 

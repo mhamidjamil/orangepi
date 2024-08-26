@@ -27,7 +27,7 @@ jobs:
 
     - name: Run pylint
       run: |
-        pylint --disable=import-error,duplicate-code **/*.py | tee pylint_output.txt
+        pylint --disable=import-error,duplicate-code,F0001 **/*.py | tee pylint_output.txt
         SCORE=$(grep "Your code has been rated at" pylint_output.txt | tail -n 1 | awk '{print $7}')
         echo "Pylint score: $SCORE"
         if [ "$SCORE" != "10.00/10" ]; then

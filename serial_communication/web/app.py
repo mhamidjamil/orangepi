@@ -38,10 +38,10 @@ def get_serial_ports():
 
 
 # Replace with the default serial port
-ser = update_serial_port(TTGO_TCALL_PORT)
-set_serial_object(ser)
-if COMMUNICATION_PORT is None:
-    COMMUNICATION_PORT = ser
+# ser = update_serial_port(TTGO_TCALL_PORT)
+# set_serial_object(ser)
+# if COMMUNICATION_PORT is None:
+#     COMMUNICATION_PORT = ser
 
 
 # ser = serial.Serial('/dev/ttyUSB0', 115200)
@@ -182,6 +182,20 @@ def watcher_route():
     """Manage led and buzzer."""
     return watcher()
 
+
+# Endpoint to handle POST requests from ESP32
+@app.route('/esp32', methods=['POST'])
+def handle_post():
+    """This function will handle POST requests from ESP32"""
+    if request.is_json:
+        data = request.get_json()
+        print(f"Received data from TTGO: {data['data']}")
+        read_serial_data(data['data'])
+
+        # Send a response back to ESP32
+        response = {"response": "Data received successfully"}
+        return jsonify(response), 200
+    return jsonify({"error": "Request must be JSON"}), 400
 
 # app.add_url_rule('/watcher', 'watcher', watcher)
 

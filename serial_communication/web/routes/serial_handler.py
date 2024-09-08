@@ -32,6 +32,7 @@ USE_MODULE_TIME = False
 
 NEXT_PRAYER_TIME = None
 NEXT_PRAYER_NAME = None
+ESP32_URL = os.getenv("ESP32_IP_ADDRESS")
 
 def is_ngrok_link_sent():
     """method to know if the NGROK link is send or not"""
@@ -333,15 +334,15 @@ def say_to_serial(serial_data):
         exception_logger("say_to_serial, data is received: [" + str(serial_data) + "]", e)
 
 
-def send_to_serial_port(serial_data):
-    """Will send string as it is to TTGO-TCall"""
-    try:
-        print(f"Sending data to serial port: {serial_data}")
-        SERIAL_PORT.write(serial_data.encode('utf-8'))
-    except serial.SerialException as e:  # pylint: disable=broad-except
-        exception_logger("send_to_serial_port, target port in serial_handler is: " + SERIAL_PORT, e)
-    except Exception as e:  # pylint: disable=broad-except
-        exception_logger("send_to_serial_port", e)
+# def send_to_serial_port(serial_data):
+#     """Will send string as it is to TTGO-TCall"""
+#     try:
+#         print(f"Sending data to serial port: {serial_data}")
+#         SERIAL_PORT.write(serial_data.encode('utf-8'))
+#     except serial.SerialException as e:  # pylint: disable=broad-except
+#         exception_logger("send_to_serial_port, target port in serial_handler is: " + SERIAL_PORT, e)
+#     except Exception as e:  # pylint: disable=broad-except
+#         exception_logger("send_to_serial_port", e)
 
 
 def update_time():
@@ -471,6 +472,22 @@ def inform_supervisor():
 
     send_custom_message(message, number)
     return jsonify({'result': 'message send successfully'})
+
+# Function to send random data to ESP32 every 5 seconds
+def send_to_serial_port(serial_data):
+    """This function Will send string as it is to TTGO-TCall"""
+    data_to_send = {"data": serial_data}
+
+    try:
+        # Send the data to ESP32 using a POST request
+        response = requests.post(ESP32_URL, json=data_to_send, timeout=10)
+        if response.status_code == 200:
+            print(f"Sent data to ESP32: {data_to_send}")
+        else:
+            print(f"Failed to send data to ESP32. Status code: {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        print(f"Error sending data to ESP32: {e}")
+
 
 # if __name__ == '__main__':
 #     while True:

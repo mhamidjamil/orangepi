@@ -405,7 +405,7 @@ def write_in_file(file_name, content):
     """Will write data in file"""
     file_name = os.path.join(os.environ['LOG_FILE_PATH'], file_name + EXTENSION_TYPE)
     content = "\n\n------------------------------>\n" + content + "\n" + \
-              "{time: " + fetch_current_time_online() + "}\n<--------------------------------\n"
+              "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t{time:" + fetch_current_time_online() + "}\n<--------------------------------\n"
     try:
         with open(file_name, 'a', encoding='utf-8') as file:
             file.write(content)

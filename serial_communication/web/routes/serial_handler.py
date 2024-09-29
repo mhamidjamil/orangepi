@@ -9,7 +9,6 @@ import os
 from bs4 import BeautifulSoup
 from pyngrok import ngrok
 from dotenv import load_dotenv
-import serial
 import requests
 from flask import jsonify, request
 from .communication.ntfy import send_warning, send_error, send_info, \
@@ -33,6 +32,8 @@ USE_MODULE_TIME = False
 NEXT_PRAYER_TIME = None
 NEXT_PRAYER_NAME = None
 ESP32_URL = os.getenv("ESP32_IP_ADDRESS")
+PRAYER_TIMES = {}
+
 
 def is_ngrok_link_sent():
     """method to know if the NGROK link is send or not"""
@@ -115,39 +116,31 @@ def send_ngrok_link(target_port=None):
         print("NGROK not initialized")
         write_in_file("ngrok_logger", "\nERROR:\n" + str(e))
 
-
-def update_namaz_time(testing=False):
-    """Will update update namaz time on TTGO-TCall"""
+def update_namaz_time():
+    """Update namaz time by comparing with current system time."""
 
     try:
         current_time = fetch_current_time_online()
         current_time = datetime.datetime.strptime(current_time, "%y/%m/%d,%H:%M:%S")
-        current_time = current_time.strftime("%I:%M %p")
+        current_time_str = current_time.strftime("%I:%M %p")
 
         time_format = "%I:%M %p"
-        time1 = datetime.datetime.strptime(current_time, time_format)
-        time_to_use = NEXT_PRAYER_TIME if NEXT_PRAYER_TIME is not None else current_time
-        time2 = datetime.datetime.strptime(time_to_use, time_format)
+        datetime.datetime.strptime(current_time_str, time_format)
 
-        if need_to_fetch_new_time(current_time, time1, time2):
-            update_namaz_time_online(current_time,testing)
+        # Fetch prayer times if not already fetched or after midnight
+        if not PRAYER_TIMES or is_after_midnight(current_time):
+            fetch_new_prayer_time()
+
+        # Compare current time with the next prayer time
+        find_next_prayer(current_time)
     except Exception as e:  # pylint: disable=broad-except
         exception_logger("update_namaz_time", e)
 
 
-def need_to_fetch_new_time(current_time, time1, time2):
-    """Decide if we need to fetch the next namaz time from an online source."""
+def fetch_new_prayer_time():
+    """Fetch the next prayer time from the website and update global variables."""
 
-    if NEXT_PRAYER_NAME is None or ("?" in NEXT_PRAYER_NAME and "PM" in current_time):
-        return True
-
-    return time1 >= time2
-
-
-def update_namaz_time_online(current_time,testing=False):
-    """this part will update variables values after fetching online data"""
-
-    global NEXT_PRAYER_NAME, NEXT_PRAYER_TIME  # pylint: disable = global-statement
+    global PRAYER_TIMES  # pylint: disable=W0602
 
     try:
         url = os.getenv("LAHORE_NAMAZ_TIME")
@@ -155,36 +148,83 @@ def update_namaz_time_online(current_time,testing=False):
         # Fetch the HTML content of the webpage
         response = requests.get(url, timeout=10)
         soup = BeautifulSoup(response.content, 'html.parser')
-        # Find the prayer time row that corresponds to the next prayer after the current time
-        prayer_times = soup.find_all('td', {'data-label': True})
 
-        for prayer_time in prayer_times:
-            NEXT_PRAYER_TIME = prayer_time.text.strip()
-            if (datetime.datetime.strptime(NEXT_PRAYER_TIME, '%I:%M %p') >
-                    datetime.datetime.strptime(current_time, '%I:%M %p')):
-                NEXT_PRAYER_NAME = prayer_time['data-label']
-                break
+        # Clear previous times
+        PRAYER_TIMES.clear()
 
-        # Print and send the next prayer time to the SERIAL_PORT terminal
-        if NEXT_PRAYER_NAME:
-            print(f"{NEXT_PRAYER_NAME}: {NEXT_PRAYER_TIME}")
-            if not testing:
-                say_to_serial(f"{NEXT_PRAYER_NAME}: {NEXT_PRAYER_TIME}")
-        else:
-            fajr_element = soup.find('td', {'data-label': 'Fajr'})
-            if fajr_element:
-                fajr_time = fajr_element.text.strip()
-                fajr_time_obj = datetime.datetime.strptime(
-                    fajr_time, '%I:%M %p') - datetime.timedelta(minutes=2)
-                NEXT_PRAYER_NAME = f"Fajr: {fajr_time_obj.strftime('%I:%M %p')} (?)"
-                print (NEXT_PRAYER_NAME)
-                if not testing:
-                    say_to_serial("Fajr: " + fajr_time_obj.strftime('%I:%M %p'))
+        # Parse the HTML to extract prayer times (based on your HTML structure)
+        prayer_times_table = soup.find('table', {'class': 'timer_table'})
+        prayer_rows = prayer_times_table.find_all('td')
+
+        # Extract times for each prayer
+        for row in prayer_rows:
+            prayer_name = row.find('span').text.strip()
+            prayer_time = row.text.strip().replace(prayer_name, '').strip()
+            PRAYER_TIMES[prayer_name] = prayer_time
+
+        print("Prayer times updated:", PRAYER_TIMES)
+
+    except Exception as e: # pylint: disable=broad-except
+        exception_logger("fetch_new_prayer_time", e)
+
+
+def find_next_prayer(current_time):
+    """Find the next upcoming prayer based on the current system time."""
+    global NEXT_PRAYER_NAME, NEXT_PRAYER_TIME  # pylint: disable=global-statement
+
+    try:
+        time_format = "%I:%M %p"
+        current_time_str = current_time.strftime(time_format)
+        current_time_obj = datetime.datetime.strptime(current_time_str, time_format)
+
+        # Debug: Show the current prayer times before comparison
+        print("Current Prayer Times:", PRAYER_TIMES)
+
+        for prayer_name, prayer_time in PRAYER_TIMES.items():
+            # Clean up prayer time by removing any extraneous text and ensuring AM/PM is included
+            cleaned_prayer_time = prayer_time.split()[0]  # Take only the time part (first entry)
+
+            # Adding the correct AM/PM based on prayer name
+            if prayer_name in ['Fajr', 'Sunrise', 'Dhuhr']:
+                cleaned_prayer_time += ' AM'  # Morning prayers
             else:
-                print("Failed to find Fajr time.")
-    except Exception as e:  # pylint: disable=broad-except
-        exception_logger("update_namaz_time_online", e)
+                cleaned_prayer_time += ' PM'  # Afternoon/evening prayers
 
+            cleaned_prayer_time = cleaned_prayer_time.strip()
+
+            print(f"Checking prayer: {prayer_name}, cleaned time: {cleaned_prayer_time}")
+
+            # Convert the cleaned prayer time to a datetime object
+            try:
+                prayer_time_obj = datetime.datetime.strptime(cleaned_prayer_time, time_format)
+            except ValueError as e:
+                print(f"Error parsing prayer time for {prayer_name}: {cleaned_prayer_time} - {e}")
+                continue  # Skip to the next prayer time if parsing fails
+
+            # Compare to current time
+            if prayer_time_obj > current_time_obj:
+                NEXT_PRAYER_NAME = prayer_name
+                NEXT_PRAYER_TIME = cleaned_prayer_time
+                break
+        else:
+            # If it's past Isha, the next prayer is tomorrow's Fajr
+            fajr_time_obj = datetime.datetime.strptime(PRAYER_TIMES['Fajr'].split()[0] +
+                            ' AM', time_format) - datetime.timedelta(minutes=5)
+            NEXT_PRAYER_NAME = "Fajr"
+            NEXT_PRAYER_TIME = fajr_time_obj.strftime(time_format)
+
+        # Log or send to serial
+        if NEXT_PRAYER_NAME:
+            print(f"Next Prayer: {NEXT_PRAYER_NAME} at {NEXT_PRAYER_TIME}")
+            say_to_serial(f"{NEXT_PRAYER_NAME}: {NEXT_PRAYER_TIME}")
+
+    except Exception as e:  # pylint: disable=broad-except
+        exception_logger("find_next_prayer", e)
+
+def is_after_midnight(current_time):
+    """Check if the current time is just after midnight (for refreshing prayer times)."""
+    midnight_time = current_time.replace(hour=0, minute=0, second=0, microsecond=0)
+    return midnight_time <= current_time <= (midnight_time + datetime.timedelta(minutes=5))
 
 
 def read_serial_data(data):
@@ -334,17 +374,6 @@ def say_to_serial(serial_data):
         exception_logger("say_to_serial, data is received: [" + str(serial_data) + "]", e)
 
 
-# def send_to_serial_port(serial_data):
-#     """Will send string as it is to TTGO-TCall"""
-#     try:
-#         print(f"Sending data to serial port: {serial_data}")
-#         SERIAL_PORT.write(serial_data.encode('utf-8'))
-#     except serial.SerialException as e:  # pylint: disable=broad-except
-#         exception_logger("send_to_serial_port, target port in serial_handler is: " + SERIAL_PORT, e)
-#     except Exception as e:  # pylint: disable=broad-except
-#         exception_logger("send_to_serial_port", e)
-
-
 def update_time():
     """Will send updated time to TTGO-TCall"""
     current_time = ""
@@ -405,7 +434,8 @@ def write_in_file(file_name, content):
     """Will write data in file"""
     file_name = os.path.join(os.environ['LOG_FILE_PATH'], file_name + EXTENSION_TYPE)
     content = "\n\n------------------------------>\n" + content + "\n" + \
-              "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t{time:" + fetch_current_time_online() + "}\n<--------------------------------\n"
+              "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t{time:" + \
+              fetch_current_time_online() + "}\n<--------------------------------\n"
     try:
         with open(file_name, 'a', encoding='utf-8') as file:
             file.write(content)
@@ -492,5 +522,5 @@ def send_to_serial_port(serial_data):
 # if __name__ == '__main__':
 #     while True:
 #         print ("\n\n\t ------------------ run ------------------ \n\n")
-#         update_namaz_time(True)
-#         time.sleep(3)
+#         update_namaz_time()
+#         time.sleep(5)

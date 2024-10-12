@@ -7,3 +7,4 @@ noip-duc -g all.ddnskey.com --username $stewed_no_ip_username --password $stewed
 /home/orangepi/Desktop/projects/xmrig/build:./xmrig -o gulf.moneroocean.stream:10128 -u 47FsuA8LNf5LSh16Fow7VzeQpx9ApqaV1SVGdppwFHZvEiiLr3SeCCZCnadarMkYAuRFwkbwPsZjU8rdMZ1ww3gnTW6iSjd -p orangepi -t 2
 /home/orangepi/Desktop/projects/orangepi/startup_scripts:python3 smb_mounter.py
 /home/orangepi/Desktop/projects/orangepi/serial_monitor_project:python3 app.py
+/home/orangepi/Desktop/projects/automation/whatsapp-bot:node server.js

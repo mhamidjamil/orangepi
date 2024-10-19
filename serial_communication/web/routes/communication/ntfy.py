@@ -56,6 +56,11 @@ def send_error(message):
     send_to_ntfy("errors", message)
     log_message("critical", "\n!!!" + message + " !!!\n")
 
+def send_cam_access_warning(message):
+    """to send cam access warning"""
+    send_to_ntfy("cam_access", message)
+    log_message("critical", "\n!!!" + message + " !!!\n")
+
 def send_critical(message):
     """to send over_heat"""
     if "temperature" in message:

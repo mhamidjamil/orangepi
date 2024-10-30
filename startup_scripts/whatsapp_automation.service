@@ -1,0 +1,16 @@
+[Unit]
+Description=whatsapp automation
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/home/orangepi/.asdf/shims/node /home/orangepi/Desktop/projects/automation/whatsapp-bot/server.js
+Restart=on-failure
+RestartSec=5
+User=orangepi
+WorkingDirectory=/home/orangepi/Desktop/projects/automation/whatsapp-bot/
+Environment=PATH=/home/orangepi/.asdf/shims:/usr/bin:/usr/local/bin
+Environment=NODE_ENV=development
+
+[Install]
+WantedBy=multi-user.target

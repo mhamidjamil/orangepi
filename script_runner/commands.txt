@@ -1,9 +1,8 @@
 /home/orangepi/Desktop/projects/simplefolio:npm start
 noip-duc -g all.ddnskey.com --username $no_ip_username --password $no_ip_password
-/home/orangepi/Desktop/projects/airisq-backend:rails s -p 3003 -b 192.168.1.238
+/home/orangepi/Desktop/projects/airisq-backend:rails server -b 'ssl://0.0.0.0:3003?key=config/ssl/server.key&cert=config/ssl/server.crt'
 /home/orangepi/Desktop/projects/orangepi/stream:python3 esp32cam.py
 /home/orangepi/Desktop/projects/orangepi/stream:python3 lenovo_cam.py
 noip-duc -g all.ddnskey.com --username $stewed_no_ip_username --password $stewed_no_ip_password
 /home/orangepi/Desktop/projects/orangepi/startup_scripts:python3 smb_mounter.py
 /home/orangepi/Desktop/projects/orangepi/serial_monitor_project:python3 app.py
-/home/orangepi/Desktop/projects/automation/whatsapp-bot:node server.js

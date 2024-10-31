@@ -6,6 +6,11 @@ on:
       - main
       - develop
       - staging
+  pull_request:
+    branches:
+      - main
+      - develop
+      - staging
 
 jobs:
   pylint:

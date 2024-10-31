@@ -1,3 +1,16 @@
+"""
+This script will load environment variables from a specified .env file and execute a series
+of commands defined in a configuration file.
+Each command can be run in a specified directory, and the execution is handled
+concurrently using threads.
+Logging is implemented to track the success or failure
+of each command, providing insights into the script's operations.
+Usage:
+1. Specify the path to the .env file and the configuration file containing commands.
+2. The script loads the environment variables and executes the commands in parallel.
+3. Logs are generated for monitoring the execution process.
+"""
+
 import os
 import subprocess
 import logging
@@ -6,7 +19,7 @@ from logging.handlers import RotatingFileHandler
 from typing import List, Tuple, Union
 from datetime import datetime
 
-# Configure logging with rotation
+#Configure logging with rotation
 log_handler = RotatingFileHandler('service_runner.log', maxBytes=5*1024*1024, backupCount=3)
 log_formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
 log_handler.setFormatter(log_formatter)
@@ -48,7 +61,7 @@ def read_config(file_path: str) -> List[Union[Tuple[int, str, str], Tuple[int, N
     except FileNotFoundError as e:
         logger.error("Configuration file not found: %s", file_path)
         logger.exception(e)
-    except Exception as e:
+    except Exception as e: # pylint: disable=W0718
         logger.error("An error occurred while reading the configuration file.")
         logger.exception(e)
     return commands
@@ -79,9 +92,9 @@ def main():
     # Add a separator for each script run
     separator = "\n \n \n " + "=" * 50 + "\n"
     timestamp = f"\n \n \n Script Run at: {datetime.now()}\n"
-    logger.info(separator + timestamp + separator)
+    logger.info("%s%s%s", separator, timestamp, separator)
 
-    env_file_path = '.env'
+    env_file_path = '/home/orangepi/Desktop/projects/orangepi/serial_communication/web/.env'
     config_file_path = 'commands.txt'
 
     # Load environment variables from the .env file

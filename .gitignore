@@ -56,3 +56,4 @@ serial_communication/web/.env
 
 # might remove this
 __init__.py
+script_runner/mytest.py

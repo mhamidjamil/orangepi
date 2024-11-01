@@ -15,7 +15,7 @@ DOTENV_PATH = '/home/orangepi/Desktop/projects/orangepi/serial_communication/web
 load_dotenv(DOTENV_PATH)
 
 # ESP32's IP address and endpoint
-esp32_url = os.getenv("ESP32_IP_ADDRESS")
+esp32_url = os.getenv("TTGO_TCALL_SERVER")
 
 # Endpoint to handle POST requests from ESP32
 @app.route('/esp32', methods=['POST'])

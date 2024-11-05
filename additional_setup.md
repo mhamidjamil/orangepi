@@ -394,7 +394,7 @@ smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
 ```
 
 #### 3. Set Mail Name
-Set your system's domain name:
+Set your system's domain name: (if you havn't set during postfix installation)
 ```bash
 echo "yourdomain.com" | sudo tee /etc/mailname
 ```

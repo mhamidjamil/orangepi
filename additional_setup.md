@@ -364,3 +364,68 @@ sudo apt-get install cifs-utils
 ### Adds this to end of the file:
 
 `//192.168.1.1/g /mnt/smbshare cifs username=$SMB_USERNAME,password=$SMB_PASSWORD,vers=1.0,iocharset=utf8 0 0`
+
+---
+
+### Setting Up Postfix to Send Emails via Gmail
+
+Follow these steps to configure your Ubuntu system to send emails using Gmail.
+
+#### 1. Install Postfix and Mailutils
+```bash
+sudo apt-get update
+sudo apt-get install postfix mailutils
+```
+- During installation, select "Internet Site" and use your system's hostname.
+
+#### 2. Configure Postfix
+Edit `/etc/postfix/main.cf`:
+```bash
+sudo nano /etc/postfix/main.cf
+```
+Add or update the following lines:
+```plaintext
+relayhost = [smtp.gmail.com]:587
+smtp_use_tls = yes
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_sasl_security_options = noanonymous
+smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+```
+
+#### 3. Set Mail Name
+Set your system's domain name:
+```bash
+echo "yourdomain.com" | sudo tee /etc/mailname
+```
+(Replace `yourdomain.com` with your actual domain or hostname.)
+
+#### 4. Create Authentication File
+Create `/etc/postfix/sasl_passwd`:
+```bash
+sudo nano /etc/postfix/sasl_passwd
+```
+Add:
+```plaintext
+[smtp.gmail.com]:587 your_email@gmail.com:your_app_password
+```
+(Replace `your_email@gmail.com` and `your_app_password`.)
+
+#### 5. Secure and Apply Authentication
+```bash
+sudo chmod 600 /etc/postfix/sasl_passwd
+sudo postmap /etc/postfix/sasl_passwd
+```
+
+#### 6. Restart Postfix
+```bash
+sudo systemctl restart postfix
+```
+
+#### 7. Send a Test Email
+```bash
+echo "Test email from Ubuntu" | mail -s "Test Email" recipient@example.com
+```
+(Replace `recipient@example.com` with the recipient's email address.)
+
+---

@@ -1,46 +1,61 @@
-"""This script will mount my router HDD to my orangepi on startup after 5 minutes"""
+"""This script will mount my router HDD and local drives to my Orange Pi on startup after 5 minutes"""
 import os
 import subprocess
 import time
 
-def run_smb_mount():
-    """Main function to mount drive"""
+def run_mounts():
+    """Main function to mount all drives"""
     # Fetch the environment variables for SMB credentials and sudo password
     smb_username = os.getenv('SMB_USERNAME')
     smb_password = os.getenv('SMB_PASSWORD')
     sudo_password = os.getenv('MY_PASSWORD')
 
-    # Ensure the required environment variables are set
+    # Ensure required environment variables are set
     if not smb_username or not smb_password or not sudo_password:
         print("Error: Required environment variables are not set.")
         return
 
-    # Construct the SMB mount command
-    smb_mount_command = (
-        f"sudo mount -t cifs -o username={smb_username},password={smb_password},vers=1.0 "
-        f"//192.168.1.1/g /mnt/smbshare"
-    )
+    # List of drives to mount (Add more as needed)
+    drives = [
+        {"type": "smb", "source": "//192.168.1.1/g", "target": "/mnt/smbshare"},
+        {"type": "local", "source": "/dev/sda1", "target": "/mnt/wd", "fs_type": "exfat"}
+    ]
 
-    # Run the command using sudo
+    for drive in drives:
+        try:
+            if drive["type"] == "smb":
+                mount_command = (
+                    f"sudo mount -t cifs -o username={smb_username},password={smb_password},vers=1.0 "
+                    f"{drive['source']} {drive['target']}"
+                )
+            elif drive["type"] == "local":
+                mount_command = (
+                    f"sudo mount -t {drive['fs_type']} {drive['source']} {drive['target']}"
+                )
+
+            # Execute the mount command
+            _ = subprocess.run(f"echo {sudo_password} | sudo -S {mount_command}",
+                               shell=True, check=True)
+            print(f"Mounted {drive['source']} to {drive['target']} successfully.")
+
+        except subprocess.CalledProcessError as e:
+            print(f"Error: Mounting {drive['source']} failed with exit status {e.returncode}")
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            print(f"An unexpected error occurred while mounting {drive['source']}: {e}")
+
+    # Restart the Docker container
     try:
-        _ = subprocess.run(f"echo {sudo_password} | sudo -S {smb_mount_command}",
-                           shell=True, check=True)
-        print("SMB share mounted successfully.")
-
-        # Restart the Docker container
         docker_restart_command = "docker restart jellyfin"
         subprocess.run(docker_restart_command, shell=True, check=True)
         print("Docker container 'jellyfin' restarted successfully.")
-
     except subprocess.CalledProcessError as e:
-        print(f"Error: Command failed with exit status {e.returncode}")
+        print(f"Error: Docker restart failed with exit status {e.returncode}")
     except Exception as e:  # pylint: disable=broad-exception-caught
-        print(f"An unexpected error occurred: {e}")
+        print(f"An unexpected error occurred while restarting Docker: {e}")
 
 if __name__ == "__main__":
-    i = 5
-    while i > 0:
-        print (f"\n\n\tWaiting for {i} minutes then mount the drive\n")
-        i -= 1
+    for i in range(5, 0, -1):
+        print(f"\n\n\tWaiting for {i} minutes then mount the drives\n")
         time.sleep(60)
-    run_smb_mount()
+
+    run_mounts()

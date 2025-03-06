@@ -69,6 +69,11 @@ def send_critical(message):
         send_to_ntfy("critical_issues", message)
     log_message("critical", "\n!!!" + message + "!!!\n")
 
+def motion_status(message):
+    """to send motion_status"""
+    send_to_ntfy("motion_status", message)
+    log_message("info", "\n!!!" + message + "!!!\n")
+
 def log_message(level, msg):
     """Log a message with the specified log level."""
     if not SAVE_LOGS:

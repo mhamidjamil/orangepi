@@ -7,4 +7,5 @@ noip-duc -g all.ddnskey.com --username $stewed_no_ip_username --password $stewed
 /home/orangepi/Desktop/projects/orangepi/startup_scripts:python3 smb_mounter.py
 /home/orangepi/Desktop/projects/orangepi/serial_monitor_project:python3 app.py
 /home/orangepi/Desktop/projects/orangepi/mailer:python3 main.py
-/home/orangepi/Desktop/projects/orangepi/startup_scripts/motion.py python3 motion.py
+/home/orangepi/Desktop/projects/orangepi/startup_scripts:python3 motion.py
+/home/orangepi/Desktop/projects/orangepi/startup_scripts:python3 gpio_manager.py

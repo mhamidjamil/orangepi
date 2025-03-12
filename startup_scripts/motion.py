@@ -21,9 +21,9 @@ RETRY_DELAY = 300  # Delay between retries in seconds (5 minutes)
 MY_PASSWORD = os.getenv("MY_PASSWORD")  # Get password from .env file
 
 # Logger function to print and log messages
-def logger(message):
+def logger(message, send_alert=True):
     print(message)
-    motion_status(message)
+    motion_status(message) if send_alert else ""
 
 
 # Function to run a command with sudo
@@ -51,7 +51,7 @@ def move_files():
     while retries < MAX_RETRIES:
         if not os.path.exists(DEST_DIR):
             retries += 1
-            logger(f"Destination folder not found. Waiting for 5 minutes. {MAX_RETRIES - retries} attempts left.")
+            logger(f"Destination folder not found. Waiting for 5 minutes. {MAX_RETRIES - retries} attempts left.", False)
             time.sleep(RETRY_DELAY)
         else:
             break

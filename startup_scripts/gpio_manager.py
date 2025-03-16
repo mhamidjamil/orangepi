@@ -1,6 +1,7 @@
-from flask import Flask, request, jsonify
+"""A simple Flask API to control GPIO pins on a Orange Pi."""
 import subprocess
 import time
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
@@ -29,7 +30,8 @@ def control_gpio():
     state = request.args.get('state', type=int)
 
     if pin is None or state not in [0, 1]:
-        return jsonify({"error": "Invalid pin or state. Pin must be an integer, and state must be 0 or 1."}), 400
+        return jsonify({"error": "Invalid pin or state."
+                        "Pin must be an integer, and state must be 0 or 1."}), 400
 
     try:
         setup_gpio(pin)  # Ensure the pin is set to output mode

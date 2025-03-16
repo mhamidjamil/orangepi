@@ -1,4 +1,5 @@
-"""This script will mount my router HDD and local drives to my Orange Pi on startup after 5 minutes"""
+"""This script will mount my router HDD and local drives
+to my Orange Pi on startup after 5 minutes"""
 import os
 import subprocess
 import time
@@ -23,10 +24,11 @@ def run_mounts():
 
     for drive in drives:
         try:
+            mount_command = ""
             if drive["type"] == "smb":
                 mount_command = (
-                    f"sudo mount -t cifs -o username={smb_username},password={smb_password},vers=1.0 "
-                    f"{drive['source']} {drive['target']}"
+                    f"sudo mount -t cifs -o username={smb_username},"
+                    f"password={smb_password},vers=1.0 {drive['source']} {drive['target']}"
                 )
             elif drive["type"] == "local":
                 mount_command = (
@@ -34,8 +36,10 @@ def run_mounts():
                 )
 
             # Execute the mount command
-            _ = subprocess.run(f"echo {sudo_password} | sudo -S {mount_command}",
-                               shell=True, check=True)
+            _ = subprocess.run(
+                f"echo {sudo_password} | sudo -S {mount_command}",
+                shell=True, check=True
+            )
             print(f"Mounted {drive['source']} to {drive['target']} successfully.")
 
         except subprocess.CalledProcessError as e:

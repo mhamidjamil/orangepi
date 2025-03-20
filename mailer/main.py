@@ -1,12 +1,14 @@
-from flask import Flask, request, jsonify
+"""Code for the Flask server that sends emails"""
 import subprocess
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
 DEFAULT_SUBJECT = 'Raspberry Mail'
-SIGNATURE = "\n\n--\nSent using Raspberry Pi Flask server"
+SIGNATURE = "\n\n--\nSent using Orange Pi Flask server"
 
 def send_email(to_email, subject, body):
+    """Sends an email using the system's mail command."""
     subject = subject or DEFAULT_SUBJECT
     body += SIGNATURE
 
@@ -21,6 +23,7 @@ def send_email(to_email, subject, body):
 
 @app.route('/send_email', methods=['POST'])
 def send_email_api():
+    """API endpoint to send an email"""
     data = request.json
     to_email = data.get('to_email')
     subject = data.get('subject')
@@ -32,8 +35,8 @@ def send_email_api():
     success = send_email(to_email, subject, body)
     if success:
         return jsonify({"message": "Email sent successfully"}), 200
-    else:
-        return jsonify({"error": "Failed to send email"}), 500
+
+    return jsonify({"error": "Failed to send email"}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3021)

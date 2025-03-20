@@ -1,3 +1,4 @@
+"""Supposed to mount drives and restart Jellyfin Docker container."""
 import os
 import subprocess
 import time
@@ -48,20 +49,21 @@ def run_mounts():
                 ["sudo", "-S"] + mount_command,
                 input=f"{sudo_password}\n", text=True, check=True
             )
-            logging.info(f"Mounted {drive['source']} to {drive['target']} successfully.")
+            logging.info("Mounted %s to %s successfully.", drive["source"], drive["target"])
 
         except subprocess.CalledProcessError as error:
-            logging.error(f"Mounting {drive['source']} failed with exit status {error.returncode}")
+            logging.error("Mounting %s failed with exit status %s",
+                          drive["source"], error.returncode)
         except FileNotFoundError:
-            logging.error(f"Mount command not found for {drive['source']}.")
+            logging.error("Mount command not found for %s.", drive["source"])
         except PermissionError:
-            logging.error(f"Permission denied while mounting {drive['source']}.")
+            logging.error("Permission denied while mounting %s.", drive["source"])
 
     try:
         subprocess.run(["docker", "restart", "jellyfin"], check=True)
         logging.info("Docker container 'jellyfin' restarted successfully.")
     except subprocess.CalledProcessError as error:
-        logging.error(f"Docker restart failed with exit status {error.returncode}.")
+        logging.error("Docker restart failed with exit status %s.", error.returncode)
     except FileNotFoundError:
         logging.error("Docker command not found. Is Docker installed?")
     except PermissionError:

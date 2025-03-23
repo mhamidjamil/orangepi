@@ -1,46 +1,75 @@
-"""This script will mount my router HDD to my orangepi on startup after 5 minutes"""
+"""Supposed to mount drives and restart Jellyfin Docker container."""
 import os
 import subprocess
 import time
+import logging
 
-def run_smb_mount():
-    """Main function to mount drive"""
-    # Fetch the environment variables for SMB credentials and sudo password
+# Configure logging
+LOG_FILE = "/home/orangepi/Desktop/projects/orangepi/logs/mount.log"  # Change path if needed
+logging.basicConfig(
+    filename=LOG_FILE,
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+
+def run_mounts():
+    """Mounts all drives and restarts the Jellyfin Docker container."""
+    logging.info("Starting the mount process...")
+
     smb_username = os.getenv('SMB_USERNAME')
     smb_password = os.getenv('SMB_PASSWORD')
     sudo_password = os.getenv('MY_PASSWORD')
 
-    # Ensure the required environment variables are set
-    if not smb_username or not smb_password or not sudo_password:
-        print("Error: Required environment variables are not set.")
+    if not all([smb_username, smb_password, sudo_password]):
+        logging.error("Missing required environment variables.")
         return
 
-    # Construct the SMB mount command
-    smb_mount_command = (
-        f"sudo mount -t cifs -o username={smb_username},password={smb_password},vers=1.0 "
-        f"//192.168.1.1/g /mnt/smbshare"
-    )
+    drives = [
+        {"type": "smb", "source": "//192.168.1.1/g", "target": "/mnt/smbshare"},
+        {"type": "local", "source": "/dev/sda1", "target": "/mnt/wd", "fs_type": "exfat"}
+    ]
 
-    # Run the command using sudo
+    for drive in drives:
+        try:
+            mount_command = []
+            if drive["type"] == "smb":
+                mount_command = [
+                    "sudo", "mount", "-t", "cifs",
+                    f"-o=username={smb_username},password={smb_password},vers=1.0",
+                    drive["source"], drive["target"]
+                ]
+            elif drive["type"] == "local":
+                mount_command = [
+                    "sudo", "mount", "-t", drive["fs_type"],
+                    drive["source"], drive["target"]
+                ]
+
+            subprocess.run(
+                ["sudo", "-S"] + mount_command,
+                input=f"{sudo_password}\n", text=True, check=True
+            )
+            logging.info("Mounted %s to %s successfully.", drive["source"], drive["target"])
+
+        except subprocess.CalledProcessError as error:
+            logging.error("Mounting %s failed with exit status %s",
+                          drive["source"], error.returncode)
+        except FileNotFoundError:
+            logging.error("Mount command not found for %s.", drive["source"])
+        except PermissionError:
+            logging.error("Permission denied while mounting %s.", drive["source"])
+
     try:
-        _ = subprocess.run(f"echo {sudo_password} | sudo -S {smb_mount_command}",
-                           shell=True, check=True)
-        print("SMB share mounted successfully.")
-
-        # Restart the Docker container
-        docker_restart_command = "docker restart jellyfin"
-        subprocess.run(docker_restart_command, shell=True, check=True)
-        print("Docker container 'jellyfin' restarted successfully.")
-
-    except subprocess.CalledProcessError as e:
-        print(f"Error: Command failed with exit status {e.returncode}")
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        print(f"An unexpected error occurred: {e}")
+        subprocess.run(["docker", "restart", "jellyfin"], check=True)
+        logging.info("Docker container 'jellyfin' restarted successfully.")
+    except subprocess.CalledProcessError as error:
+        logging.error("Docker restart failed with exit status %s.", error.returncode)
+    except FileNotFoundError:
+        logging.error("Docker command not found. Is Docker installed?")
+    except PermissionError:
+        logging.error("Permission denied while restarting Docker.")
 
 if __name__ == "__main__":
-    i = 5
-    while i > 0:
-        print (f"\n\n\tWaiting for {i} minutes then mount the drive\n")
-        i -= 1
-        time.sleep(60)
-    run_smb_mount()
+    logging.info("Waiting 5 minutes before starting mount process...")
+    time.sleep(300)
+    run_mounts()

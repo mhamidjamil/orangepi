@@ -6,8 +6,8 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 # 🔧 Global Config
-DEFAULT_OUTPUT_PINS = [10, 11]  # Easily editable list of pins to initialize as output
-LED_PIN = 10  # LED pin (should be included in DEFAULT_OUTPUT_PINS)
+DEFAULT_OUTPUT_PINS = [21, 11]  # Easily editable list of pins to initialize as output
+LED_PIN = 21  # LED pin (should be included in DEFAULT_OUTPUT_PINS)
 configured_pins = set()  # Set to track initialized pins
 
 

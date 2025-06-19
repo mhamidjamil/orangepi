@@ -2,8 +2,19 @@
 import subprocess
 import time
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
+
+CORS(app, resources={
+    r"/color": {
+        "origins": [
+            "http://192.168.1.123:3012",
+            "http://leds.dolphinpk.com",
+            "http://mahmoodhamid.ddns.net:3011"
+        ]
+    }
+})
 
 # 🔧 Constants
 DEFAULT_OUTPUT_PINS = [21, 11]  # Output pins

@@ -33,6 +33,8 @@ NEXT_PRAYER_TIME = None
 NEXT_PRAYER_NAME = None
 ESP32_URL = os.getenv("TTGO_TCALL_SERVER")
 PRAYER_TIMES = {}
+CONNECTION_CHECKED = False
+CONNECTION_STATUS = False
 
 
 def is_ngrok_link_sent():
@@ -356,7 +358,7 @@ def fetch_current_time_online():
             formatted_time = system_time()
         return str(formatted_time)
     except requests.exceptions.RequestException as e:
-        exception_logger("fetch_current_time_online", e)
+        exception_logger("fetch_current_time_online", e, False)
         return None
 
 
@@ -447,24 +449,33 @@ def write_in_file(file_name, content):
         return False
 
 
-def connected_with_internet():
+def connected_with_internet(Recheck=False):
     """If module is not connected with internet it will try to connect"""
-    while True:
+    global CONNECTION_CHECKED, CONNECTION_STATUS  # pylint: disable=global-statement
+    if CONNECTION_CHECKED and not Recheck:
+        print(f"Connection already checked previous status: {CONNECTION_STATUS}, skipping...")
+        return CONNECTION_STATUS
+    retries = 5
+    while True and retries > 0 and not Recheck:
+        retries -= 1
+        CONNECTION_CHECKED = True
         try:
             # Check internet connectivity by pinging Google's public DNS server
             subprocess.run(['ping', '-c', '1', '8.8.8.8'], check=True)
             print("Internet is connected.")
+            CONNECTION_STATUS = True
             return True
         except subprocess.CalledProcessError:
             print("No internet connectivity. Retrying in 5 minutes...")
+            CONNECTION_STATUS = False
             # Sleep for 5 minutes before checking again
             time.sleep(300)
             connected_with_internet()
 
 
-def exception_logger(function_name, error):
+def exception_logger(function_name, error, check_time=True):
     """Work as a logger (additional logging with function name)"""
-    if connected_with_internet():
+    if connected_with_internet() and check_time:
         send_error(f"Error in {function_name}."
                    f"\tError message: {error} at: {fetch_current_time_online()}")
         msg = f"\n------------>\n Exception occur in {function_name} function." + \

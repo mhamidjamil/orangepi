@@ -300,7 +300,7 @@ if __name__ == '__main__':
             TESTING_ENVIRONMENT = True
 
         current_process_id = multiprocessing.current_process().pid
-        print(f"\n!!----------> Process ID: {current_process_id} - Executing my_function")
+        print(f"\n\n\n!!----------> Process ID: {current_process_id} - Executing my_function")
 
         thread = threading.Thread(target=update_schedule)
         thread2 = threading.Thread(target=one_time_task)

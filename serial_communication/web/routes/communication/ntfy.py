@@ -74,6 +74,11 @@ def motion_status(message):
     send_to_ntfy("motion_status", message)
     log_message("info", "\n!!!" + message + "!!!\n")
 
+def waha_msgs(message):
+    """to send waha messages"""
+    send_to_ntfy("waha", message)
+    log_message("info", "\n!!!" + message + "!!!\n")
+
 def log_message(level, msg):
     """Log a message with the specified log level."""
     if not SAVE_LOGS:

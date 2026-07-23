@@ -1,68 +1,86 @@
-# Orange Pi with ESP32 TTGO TCall
+# Orange Pi 5 Plus automation hub 🍊
 
-![Workflow Status](https://github.com/muhammadhamidjamil/orangepi/workflows/Pylint/badge.svg)
+The always-on machine in the middle of my home setup. It talks to an [ESP32 TTGO T-Call](https://github.com/mhamidjamil/TTGO_TCall) over a serial line, exposes a small web console for that link, records telemetry to InfluxDB, pushes alerts to ntfy, sends mail, and runs everything else on a schedule.
 
-In this repository, Python scripts are employed to automate a myriad of tasks, facilitating seamless communication with various interconnected projects. The codebase serves as a robust foundation for orchestrating and streamlining operations, promoting efficiency and coordination across multiple facets of the project ecosystem.
+[![Pylint](https://github.com/mhamidjamil/orangepi/actions/workflows/pylint.yml/badge.svg)](https://github.com/mhamidjamil/orangepi/actions/workflows/pylint.yml)
+![Python](https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-web%20console-000000?logo=flask&logoColor=white)
+![Orange Pi 5 Plus](https://img.shields.io/badge/Orange%20Pi-5%20Plus-FF6600)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-# Serial Interface Web App
+![Serial console](Screenshot%202024-02-27%20234903.png)
 
-This is a simple web application that allows you to view and interact with serial data from a device connected to your Orange Pi 5 Plus.
+---
 
-## Getting Started
+## What runs here
 
-1. **Install Dependencies:**
-   Make sure you have Python, Flask, and PySerial installed.
+| Piece | What it does |
+|---|---|
+| **Serial web console** | Live view of the serial traffic to and from the TTGO board, with an input box to send commands back |
+| **Watcher and uptime checker** | Watches services and reports when something stops answering |
+| **Script runner** | Runs shell commands and scripts on the Pi, triggered from the web console |
+| **InfluxDB writer** | Stores sensor and telemetry readings for later charting |
+| **ntfy bridge** | Turns events on the Pi into push notifications on my phone |
+| **Mailer** | Sends outbound mail for alerts that deserve more than a push |
+| **Prayer time fetcher** | Fetches upcoming Namaz times and the current local time for Lahore, Punjab, Pakistan, and feeds them to the TTGO display |
+| **Two factor helper** | Pairs with the TTGO T-Call project so an SMS to the GSM board can act as a second factor |
+| **Tunnels and dynamic DNS** | ngrok, Cloudflare and No-IP setup so the Pi is reachable from outside the house |
+| **Home Assistant configuration** | The automation and configuration YAML the Pi runs |
 
-   ```bash
-   pip install Flask pyserial schedule requests beautifulsoup4 pyngrok python-dotenv influxdb_client
-   ```
+## Talking to the TTGO board
 
-2. **Run the App:**
-   Open a terminal, navigate to the project directory, and run:
+Messages over the serial line are addressed, so both sides can ignore traffic that is not theirs:
 
-   ```bash
-   python app.py
-   ```
+```
+Orange Pi  ->  TTGO T-Call    {hay ttgo-tcall! here goes the query?}
+TTGO T-Call ->  Orange Pi     {hay orange-pi! here goes the query?}
+```
 
-   Access the web interface at `http://127.0.0.1:6677` or `http://localhost:6677`. Replace the address with the IP of your Orange Pi for network access.
+## Serial web console
 
-3. **Usage:**
+```bash
+pip install Flask pyserial schedule requests beautifulsoup4 pyngrok python-dotenv influxdb_client
+cd serial_communication/web
+python app.py
+```
 
-   - The web page displays real-time serial data from the connected device.
-   - Use the input field to send data back to the device.
+Open `http://<orange-pi-ip>:6677`. On the Pi itself, `http://127.0.0.1:6677` works too.
 
-4. **Customization:**
-   - Modify the Python script (`app.py`) to adjust the serial port or customize the interface.
-   - Update the HTML template (`templates/index.html`) to change the look and feel.
+- The page streams live serial data from the connected device.
+- The input field sends data back down the same line.
+- The serial port lives in `app.py`; the page markup is in `templates/index.html`.
 
-## Dependencies
+## Repository layout
 
-- Python
-- Flask
-- PySerial
-- see [discussions](https://github.com/mhamidjamil/orangePi/discussions/15) for more details
+| Path | Contents |
+|---|---|
+| `serial_communication/` | The serial link: web console, routes for ntfy, the watcher, the uptime checker and the script inspector |
+| `serial_communication/namaz/`, `serial_communication/time/` | Prayer time and clock feeds pushed to the TTGO board |
+| `influx_db/` | InfluxDB manager, ntfy helper and a notebook for poking at the data |
+| `api_communication/` | Outbound API calls to the other projects in the setup |
+| `mailer/` | Outbound mail |
+| `script_runner/` | Command execution on the Pi |
+| `home_automation/` | Home Assistant automation and configuration YAML |
+| `docker/` | ntfy, Cloudflare and No-IP container setup |
+| `ngrok_work/`, `no-ip/` | Tunnel and dynamic DNS startup scripts |
+| `additional_setup.md` | Host setup notes for a fresh Orange Pi |
+
+Files ending in `.temp` are templates. Copy one, drop the suffix, and fill in your own values.
+
+## Related projects
+
+- [TTGO_TCall](https://github.com/mhamidjamil/TTGO_TCall) is the GSM board on the other end of the serial line, an SMS and call gateway.
+- [ESP32-S3_work](https://github.com/mhamidjamil/ESP32-S3_work) turns an ESP32-S3 into a remotely driven USB keyboard.
+- [waha](https://github.com/mhamidjamil/waha) handles the WhatsApp side of notifications.
+
+More background lives in the [discussions](https://github.com/mhamidjamil/orangepi/discussions/15).
+
+## Contributing
+
+Issues and pull requests are welcome. The Pylint workflow gates on a 10.00/10 score, so run `pylint` locally before opening a pull request.
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+[MIT](LICENSE)
 
-- How Orange Pi send commands to TTGO-TCall:
-  {hay ttgo-tcall! here goes the query?}
-- How TTGO_TCall send commands to Orange Pi:
-  {hay orange-pi! here goes the query?}
-Certainly! Here's a concise note for your README file:
-
-New feature added to this project offers a streamlined solution for fetching upcoming Namaz (prayer) times and the current time, tailored for Lahore/Punjab, Pakistan. Additionally, it seamlessly integrates with the [TTGO TCall](https://github.com/mhamidjamil/TTGO_TCall) project, allowing users to leverage it as a Two-Factor Authentication (2FA) method.
-
-**Key Features:**
-
-- Retrieve Namaz Times for Lahore/Punjab, Pakistan.
-- Obtain Current Time in the Local Time Zone.
-- Integration with TTGO TCall for 2FA Verification.
-
-**Usage:**
-
-- To unlock the full potential of the 2FA feature, it is recommended to combine the functionalities of both the OrangePi and TTGO TCall projects.
-
-Note:
-Read me file might be out dated as I add almost 2 to 3 new features per week so do check closed issues to know which new feature is added.
+> **Heads up:** new pieces land here a few times a week, so this page trails the code. The closed issues are the accurate changelog.
